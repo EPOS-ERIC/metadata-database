@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Pre-build
         run: |
-          mv ./metadata-catalogue/test-data/testinserts.sql ./metadata-catalogue/postgis-settings/ && ./initdb.sh
+          mv ./metadata-catalogue/test-data/testinserts.sql ./metadata-catalogue/postgis-settings/testinserts.sql && ./initdb.sh
       - name: Docker build
         run: |
           docker build  -f Dockerfile.build  -t epos/metadata-database-deploy-pop-test:latest .
