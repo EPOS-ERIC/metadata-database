@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Copy files
         working-directory: ${{ env.WORK_DIR }}/
-        run: pwd && cp -r ./metadata-catalogue/test-data/testinserts.sql "$GITHUB_WORKSPACE/metadata-catalogue/postgis-settings/testinserts.sql"          
+        run: pwd && ls && cp -r ./metadata-catalogue/test-data/testinserts.sql "$GITHUB_WORKSPACE/metadata-catalogue/postgis-settings/testinserts.sql"          
       - name: Pre-build
         run: |
           ./initdb.sh
