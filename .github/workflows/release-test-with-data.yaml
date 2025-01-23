@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Copy files
-        run: pwd && ls && cp "./metadata-catalogue/test-data/testinserts.sql" "./metadata-catalogue/postgis-settings/testinserts.sql"          
+        run: pwd && ls && cd metadata-catalogue && ls && cd test-data && ls && cd .. && cd postgis-settings && ls &&cp "./metadata-catalogue/test-data/testinserts.sql" "./metadata-catalogue/postgis-settings/testinserts.sql"          
       - name: Pre-build
         run: |
           ./initdb.sh
