@@ -1,0 +1,25 @@
+name: release and push to central
+on:
+  push:
+    branches:
+      - refactoring
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v2
+      - name: Pre-build
+        run: |
+          cp ./metadata-catalogue/test-data/testinserts.sql ./metadata-catalogue/postgis-settings/testinserts.sql && ./initdb.sh
+      - name: Docker build
+        run: |
+          docker build  -f Dockerfile.build  -t epos/metadata-database-deploy-pop-test:latest .
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Docker push
+        run: |
+          docker push epos/metadata-database-deploy-pop-test:latest
