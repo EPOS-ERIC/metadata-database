@@ -19,11 +19,11 @@ CREATE TABLE plugin (
 );
 
 CREATE TABLE plugin_relations (
-	id character varying(1024) NOT NULL PRIMARY KEY,					-- the id of the relation (generated when the relation is created)
-	plugin_id character varying(1024) NOT NULL REFERENCES plugin(id),	-- the id of the plugin (from the plugin table)
-	relation_id VARCHAR(1024) NOT NULL,									-- the instanceId of the distribution
-	input_format VARCHAR(1024) NOT NULL,								-- the file format expected by the plugin for the input
-	output_format VARCHAR(1024) NOT NULL,								-- the file format expected as the output from the plugin execution
+	id character varying(1024) NOT NULL PRIMARY KEY,									-- the id of the relation (generated when the relation is created)
+	plugin_id character varying(1024) NOT NULL REFERENCES plugin(id) ON DELETE CASCADE,	-- the id of the plugin (from the plugin table)
+	relation_id VARCHAR(1024) NOT NULL,													-- the instanceId of the distribution
+	input_format VARCHAR(1024) NOT NULL,												-- the file format expected by the plugin for the input
+	output_format VARCHAR(1024) NOT NULL,												-- the file format expected as the output from the plugin execution
 	UNIQUE(plugin_id, relation_id, input_format, output_format)
 );
 
