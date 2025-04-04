@@ -13,6 +13,7 @@
 # the License.
 
 INITCERIF=docker-entrypoint-initdb.d
+COUNT_DB=0
 COUNT=0
 
 mkdir $INITCERIF
@@ -20,72 +21,82 @@ mkdir $INITCERIF
 # METADATA CATALOGUE
 
 for x in metadata-catalogue/build/*; do
-cp  $x $INITCERIF/$((COUNT))_${x##*/}
+cp  $x $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 done 
 COUNT=$((COUNT + 1))
 
 for x in metadata-catalogue/epos-datamodel-db/*; do
-echo "\connect metadata_catalogue;" > $INITCERIF/$((COUNT))_${x##*/}
-cat  $x >> $INITCERIF/$((COUNT))_${x##*/}
+echo "\connect metadata_catalogue;" > $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
+cat  $x >> $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 done
 COUNT=$((COUNT + 1))
 
 for x in metadata-catalogue/postgis-setting/*; do
-echo "\connect metadata_catalogue;" > $INITCERIF/$((COUNT))_${x##*/}
-cat  $x >> $INITCERIF/$((COUNT))_${x##*/}
+echo "\connect metadata_catalogue;" > $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
+cat  $x >> $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 done
 COUNT=$((COUNT + 1))
 
+COUNT=0
+COUNT_DB=$((COUNT_DB + 1))
+
 # SHARING CATALOGUE
 for x in sharing-catalogue/build/*; do
-cp  $x $INITCERIF/$((COUNT))_${x##*/}
+cp  $x $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 done 
 COUNT=$((COUNT + 1))
 
 for x in sharing-catalogue/epos-sharing-db/*; do
-echo "\connect sharing_catalogue;" > $INITCERIF/$((COUNT))_${x##*/}
-cat  $x >> $INITCERIF/$((COUNT))_${x##*/}
+echo "\connect sharing_catalogue;" > $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
+cat  $x >> $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 done
 COUNT=$((COUNT + 1))
 
 for x in sharing-catalogue/postgis-setting/*; do
-echo "\connect sharing_catalogue;" > $INITCERIF/$((COUNT))_${x##*/}
-cat  $x >> $INITCERIF/$((COUNT))_${x##*/}
+echo "\connect sharing_catalogue;" > $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
+cat  $x >> $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 done
 COUNT=$((COUNT + 1))
 
+COUNT=0
+COUNT_DB=$((COUNT_DB + 1))
+
 # CONVERTER CATALOGUE
 for x in converter-catalogue/build/*; do
-cp  $x $INITCERIF/$((COUNT))_${x##*/}
+cp  $x $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 done 
 COUNT=$((COUNT + 1))
 
 for x in converter-catalogue/epos-converter-db/*; do
-echo "\connect converter_catalogue;" > $INITCERIF/$((COUNT))_${x##*/}
-cat  $x >> $INITCERIF/$((COUNT))_${x##*/}
+echo "\connect converter_catalogue;" > $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
+cat  $x >> $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 done
 COUNT=$((COUNT + 1))
 
 for x in converter-catalogue/postgis-setting/*; do
-echo "\connect converter_catalogue;" > $INITCERIF/$((COUNT))_${x##*/}
-cat  $x >> $INITCERIF/$((COUNT))_${x##*/}
+echo "\connect converter_catalogue;" > $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
+cat  $x >> $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 done
 COUNT=$((COUNT + 1))
 
+
+COUNT=0
+COUNT_DB=$((COUNT_DB + 1))
+
 # PROCESSING CATALOGUE
 for x in processing-catalogue/build/*; do
-cp  $x $INITCERIF/$((COUNT))_${x##*/}
+cp  $x $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 done 
 COUNT=$((COUNT + 1))
 
 for x in processing-catalogue/epos-processing-db/*; do
-echo "\connect processing_catalogue;" > $INITCERIF/$((COUNT))_${x##*/}
-cat  $x >> $INITCERIF/$((COUNT))_${x##*/}
+echo "\connect processing_catalogue;" > $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
+cat  $x >> $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 done
 COUNT=$((COUNT + 1))
 
 for x in processing-catalogue/postgis-setting/*; do
-echo "\connect processing_catalogue;" > $INITCERIF/$((COUNT))_${x##*/}
-cat  $x >> $INITCERIF/$((COUNT))_${x##*/}
+echo "\connect processing_catalogue;" > $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
+cat  $x >> $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 done
 COUNT=$((COUNT + 1))
