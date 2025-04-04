@@ -1,3 +1,4 @@
+\connect processing_catalogue;
 BEGIN;
 
 CREATE TYPE processing_unit_status AS ENUM ('READY', 'CREATING', 'UPDATING', 'DELETING', 'NOT_READY');

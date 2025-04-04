@@ -83,7 +83,7 @@ echo "\connect processing_catalogue;" > $INITCERIF/$((COUNT))_${x##*/}
 cat  $x >> $INITCERIF/$((COUNT))_${x##*/}
 done
 COUNT=$((COUNT + 1))
-ì
+
 for x in processing-catalogue/postgis-setting/*; do
 echo "\connect processing_catalogue;" > $INITCERIF/$((COUNT))_${x##*/}
 cat  $x >> $INITCERIF/$((COUNT))_${x##*/}
