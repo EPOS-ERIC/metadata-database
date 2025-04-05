@@ -13,6 +13,7 @@ build metadata database:
     - echo "$ADMIN_REFACTORING_INSERT" >> ./metadata-catalogue/epos-datamodel-db/users.sql
     - echo "$TESTER_REFACTORING_INSERT" >> ./metadata-catalogue/epos-datamodel-db/testers.sql
     - echo "$GROUPS_REFACTORING_INSERT" >> ./metadata-catalogue/epos-datamodel-db/groups.sql
+    - echo "$GROUPS_USERS_INSERT" >> ./metadata-catalogue/postgis-setting/relations.sql
     - sh ./initdb.sh
   script :
     - docker build -f Dockerfile.build -t "$CI_REGISTRY_IMAGE/deploy:$CI_COMMIT_REF_SLUG" -t "$CI_REGISTRY_IMAGE/deploy:latest" --build-arg GIT_DEPLOY_USER="$GIT_DEPLOY_USER" --build-arg GIT_DEPLOY_PASS="$GIT_DEPLOY_PASS" --build-arg GIT_SERVER="$GIT_SERVER" .
@@ -36,6 +37,7 @@ build restore database:
     - echo "$ADMIN_REFACTORING_INSERT" >> ./metadata-catalogue/epos-datamodel-db/users.sql
     - echo "$TESTER_REFACTORING_INSERT" >> ./metadata-catalogue/epos-datamodel-db/testers.sql
     - echo "$GROUPS_REFACTORING_INSERT" >> ./metadata-catalogue/epos-datamodel-db/groups.sql
+    - echo "$GROUPS_USERS_INSERT" >> ./metadata-catalogue/postgis-setting/relations.sql
     - sh ./cleandb.sh
   script :
     - docker build -f Dockerfile.clean -t "$CI_REGISTRY_IMAGE/restorejob:$CI_COMMIT_REF_SLUG" -t "$CI_REGISTRY_IMAGE/restorejob:latest" --build-arg GIT_DEPLOY_USER="$GIT_DEPLOY_USER" --build-arg GIT_DEPLOY_PASS="$GIT_DEPLOY_PASS" --build-arg GIT_SERVER="$GIT_SERVER" .
@@ -59,6 +61,7 @@ build spilo:
     - echo "$ADMIN_REFACTORING_INSERT" >> ./metadata-catalogue/epos-datamodel-db/users.sql
     - echo "$TESTER_REFACTORING_INSERT" >> ./metadata-catalogue/epos-datamodel-db/testers.sql
     - echo "$GROUPS_REFACTORING_INSERT" >> ./metadata-catalogue/epos-datamodel-db/groups.sql
+    - echo "$GROUPS_USERS_INSERT" >> ./metadata-catalogue/postgis-setting/relations.sql
     - sh ./cleandb.sh
   script :
     - docker build -f Dockerfile.spilo -t "$CI_REGISTRY_IMAGE/spilo:$CI_COMMIT_REF_SLUG" -t "$CI_REGISTRY_IMAGE/spilo:latest" --build-arg GIT_DEPLOY_USER="$GIT_DEPLOY_USER" --build-arg GIT_DEPLOY_PASS="$GIT_DEPLOY_PASS" --build-arg GIT_SERVER="$GIT_SERVER" .
