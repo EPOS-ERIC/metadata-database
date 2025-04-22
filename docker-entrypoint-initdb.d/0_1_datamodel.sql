@@ -689,7 +689,7 @@ CREATE TABLE IF NOT EXISTS public.webservice_relation
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
     UNIQUE(entity_instance_id,resource_entity),
-    PRIMARY KEY (webservice_instance_id),
+    PRIMARY KEY (webservice_instance_id, entity_instance_id),
     FOREIGN KEY (webservice_instance_id) REFERENCES public.webservice (instance_id)
 );
 
