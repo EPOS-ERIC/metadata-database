@@ -12,7 +12,7 @@ CREATE TYPE requeststatustype AS ENUM ('ACCEPTED', 'PENDING', 'NONE');
 
 CREATE TYPE ontologytype AS ENUM ('BASE', 'MAPPING');
 
-CREATE TABLE IF NOT EXISTS public.ontologies
+CREATE TABLE IF NOT EXISTS metadata_catalogue.ontologies
 (
     id character varying(100) NOT NULL,
     name character varying(1024),
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS public.ontologies
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS public.versioningstatus
+CREATE TABLE IF NOT EXISTS metadata_catalogue.versioningstatus
 (
     version_id character varying(100) NOT NULL,
     instance_id character varying(100),
@@ -41,62 +41,17 @@ CREATE TABLE IF NOT EXISTS public.versioningstatus
 
 /* EPOS DATA MODEL MASTER ENTITIES TABLE */
 
-CREATE TABLE IF NOT EXISTS public.edm_entity_id
+CREATE TABLE IF NOT EXISTS metadata_catalogue.edm_entity_id
 (
     meta_id character varying(100),
     table_name character varying(1024),
     PRIMARY KEY (meta_id)
 );
 
-/* ROLES AND GROUPS */
-
-CREATE TABLE IF NOT EXISTS public.metadata_user
-(
-    auth_identifier character varying(1024) NOT NULL,
-    familyname character varying(1024),
-    givenname character varying(1024),
-    email character varying(1024),
-    isadmin character varying(1024),
-    PRIMARY KEY (auth_identifier)
-);
-
-CREATE TABLE IF NOT EXISTS public.metadata_group
-(
-    id character varying(100) NOT NULL,
-    name character varying(1024),
-    description text,
-    PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS public.metadata_group_user
-(
-    id character varying(100) NOT NULL,
-    auth_identifier character varying(100) NOT NULL,
-    group_id character varying(100),
-    request_status character varying(100),
-    role character varying(100),
-    PRIMARY KEY (id),
-    FOREIGN KEY (group_id) REFERENCES public.metadata_group (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (auth_identifier) REFERENCES public.metadata_user (auth_identifier) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS public.authorization_group
-(
-    id character varying(100) NOT NULL,
-    group_id character varying(100),
-    meta_id character varying(100),
-    PRIMARY KEY (id),
-    FOREIGN KEY (group_id) REFERENCES public.metadata_group (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (meta_id) REFERENCES public.edm_entity_id (meta_id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
-INSERT INTO public.metadata_group (id, name, description)
-VALUES
-    (uuid_generate_v4(), 'ALL', 'Basic group');
 
 /* IDENTIFIER */
 
-CREATE TABLE IF NOT EXISTS public.identifier
+CREATE TABLE IF NOT EXISTS metadata_catalogue.identifier
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -105,13 +60,13 @@ CREATE TABLE IF NOT EXISTS public.identifier
     type character varying(1024),
     value character varying(1024),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
 
 /* QUANTITATIVEVALUE */
 
-CREATE TABLE IF NOT EXISTS public.quantitativevalue
+CREATE TABLE IF NOT EXISTS metadata_catalogue.quantitativevalue
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -120,12 +75,12 @@ CREATE TABLE IF NOT EXISTS public.quantitativevalue
     unitcode character varying(1024),
     value character varying(1024),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
 CREATE TYPE elementtype AS ENUM ('TELEPHONE', 'EMAIL', 'LANGUAGE', 'DOWNLOADURL', 'ACCESSURL','DOCUMENTATION', 'RETURNS', 'PARAMVALUE', 'PROGRAMMINGLANGUAGE', 'PAGEURL');
 
-CREATE TABLE IF NOT EXISTS public.element
+CREATE TABLE IF NOT EXISTS metadata_catalogue.element
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -134,10 +89,10 @@ CREATE TABLE IF NOT EXISTS public.element
     type character varying(100),
     value text,
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.spatial
+CREATE TABLE IF NOT EXISTS metadata_catalogue.spatial
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -145,10 +100,10 @@ CREATE TABLE IF NOT EXISTS public.spatial
     version_id character varying(100),
     location text,
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.temporal
+CREATE TABLE IF NOT EXISTS metadata_catalogue.temporal
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -157,13 +112,13 @@ CREATE TABLE IF NOT EXISTS public.temporal
     startDate timestamp,
     endDate timestamp,
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
 
 /* ADDRESS */
 
-CREATE TABLE IF NOT EXISTS public.address
+CREATE TABLE IF NOT EXISTS metadata_catalogue.address
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -175,14 +130,14 @@ CREATE TABLE IF NOT EXISTS public.address
     postal_code character varying(50),
     locality character varying(255),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
 
 /* CATEGORIES AND CATEGORIES SCHEMES */
 
 
-CREATE TABLE IF NOT EXISTS public.category_scheme
+CREATE TABLE IF NOT EXISTS metadata_catalogue.category_scheme
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -196,44 +151,44 @@ CREATE TABLE IF NOT EXISTS public.category_scheme
     color character varying(255),
     orderitemnumber character varying(255),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.category
+CREATE TABLE IF NOT EXISTS metadata_catalogue.category
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
     uid character varying(1024),
     version_id character varying(100),
-    in_scheme character varying(100) REFERENCES public.category_scheme (instance_id),
+    in_scheme character varying(100) REFERENCES metadata_catalogue.category_scheme (instance_id),
     description text,
     name character varying(255),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.category_ispartof
+CREATE TABLE IF NOT EXISTS metadata_catalogue.category_ispartof
 (
     category1_instance_id character varying(100) NOT NULL,
     category2_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (category1_instance_id, category2_instance_id),
-    FOREIGN KEY (category1_instance_id) REFERENCES public.category (instance_id),
-    FOREIGN KEY (category2_instance_id) REFERENCES public.category (instance_id)
+    FOREIGN KEY (category1_instance_id) REFERENCES metadata_catalogue.category (instance_id),
+    FOREIGN KEY (category2_instance_id) REFERENCES metadata_catalogue.category (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.category_hastopconcept
+CREATE TABLE IF NOT EXISTS metadata_catalogue.category_hastopconcept
 (
     category_scheme_instance_id character varying(100) NOT NULL,
     category_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (category_scheme_instance_id, category_instance_id),
-    FOREIGN KEY (category_scheme_instance_id) REFERENCES public.category_scheme (instance_id),
-    FOREIGN KEY (category_instance_id) REFERENCES public.category (instance_id)
+    FOREIGN KEY (category_scheme_instance_id) REFERENCES metadata_catalogue.category_scheme (instance_id),
+    FOREIGN KEY (category_instance_id) REFERENCES metadata_catalogue.category (instance_id)
 );
 
 /* PERSON */
 
 
-CREATE TABLE IF NOT EXISTS public.person
+CREATE TABLE IF NOT EXISTS metadata_catalogue.person
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -245,14 +200,14 @@ CREATE TABLE IF NOT EXISTS public.person
     cvurl character varying(1024),
     address_id character varying(100),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id),
-    FOREIGN KEY (address_id) REFERENCES public.address (instance_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id),
+    FOREIGN KEY (address_id) REFERENCES metadata_catalogue.address (instance_id)
 );
 
 
 /* CONTACTPOINT */
 
-CREATE TABLE IF NOT EXISTS public.contactpoint
+CREATE TABLE IF NOT EXISTS metadata_catalogue.contactpoint
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -260,50 +215,50 @@ CREATE TABLE IF NOT EXISTS public.contactpoint
     version_id character varying(100),
     role character varying(1024),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
 
-CREATE TABLE IF NOT EXISTS public.contactpoint_element /* email, telephone, language */
+CREATE TABLE IF NOT EXISTS metadata_catalogue.contactpoint_element /* email, telephone, language */
 (
     contactpoint_instance_id character varying(100) NOT NULL,
     element_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (contactpoint_instance_id, element_instance_id),
-    FOREIGN KEY (contactpoint_instance_id) REFERENCES public.contactpoint (instance_id),
-    FOREIGN KEY (element_instance_id) REFERENCES public.element (instance_id)
+    FOREIGN KEY (contactpoint_instance_id) REFERENCES metadata_catalogue.contactpoint (instance_id),
+    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.person_identifier
+CREATE TABLE IF NOT EXISTS metadata_catalogue.person_identifier
 (
     person_instance_id character varying(100) NOT NULL,
     identifier_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (person_instance_id,identifier_instance_id),
-    FOREIGN KEY (person_instance_id) REFERENCES public.person (instance_id),
-    FOREIGN KEY (identifier_instance_id) REFERENCES public.identifier (instance_id)
+    FOREIGN KEY (person_instance_id) REFERENCES metadata_catalogue.person (instance_id),
+    FOREIGN KEY (identifier_instance_id) REFERENCES metadata_catalogue.identifier (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.person_contactpoint
+CREATE TABLE IF NOT EXISTS metadata_catalogue.person_contactpoint
 (
     person_instance_id character varying(100) NOT NULL,
     contactpoint_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (person_instance_id, contactpoint_instance_id),
-    FOREIGN KEY (person_instance_id) REFERENCES public.person (instance_id),
-    FOREIGN KEY (contactpoint_instance_id) REFERENCES public.contactpoint (instance_id)
+    FOREIGN KEY (person_instance_id) REFERENCES metadata_catalogue.person (instance_id),
+    FOREIGN KEY (contactpoint_instance_id) REFERENCES metadata_catalogue.contactpoint (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.person_element /* email, telephone */
+CREATE TABLE IF NOT EXISTS metadata_catalogue.person_element /* email, telephone */
 (
     person_instance_id character varying(100) NOT NULL,
     element_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (person_instance_id, element_instance_id),
-    FOREIGN KEY (person_instance_id) REFERENCES public.person (instance_id),
-    FOREIGN KEY (element_instance_id) REFERENCES public.element (instance_id)
+    FOREIGN KEY (person_instance_id) REFERENCES metadata_catalogue.person (instance_id),
+    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id)
 );
 
 
 /* ORGANIZATION */
 
-CREATE TABLE IF NOT EXISTS public.organization
+CREATE TABLE IF NOT EXISTS metadata_catalogue.organization
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -318,70 +273,70 @@ CREATE TABLE IF NOT EXISTS public.organization
     type character varying(1024),
     maturity character varying(1024),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id),
-    FOREIGN KEY (address_id) REFERENCES public.address (instance_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id),
+    FOREIGN KEY (address_id) REFERENCES metadata_catalogue.address (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.organization_memberof
+CREATE TABLE IF NOT EXISTS metadata_catalogue.organization_memberof
 (
     organization1_instance_id character varying(100) NOT NULL,
     organization2_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (organization1_instance_id, organization2_instance_id),
-    FOREIGN KEY (organization1_instance_id) REFERENCES public.organization (instance_id),
-    FOREIGN KEY (organization2_instance_id) REFERENCES public.organization (instance_id)
+    FOREIGN KEY (organization1_instance_id) REFERENCES metadata_catalogue.organization (instance_id),
+    FOREIGN KEY (organization2_instance_id) REFERENCES metadata_catalogue.organization (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.organization_affiliation
+CREATE TABLE IF NOT EXISTS metadata_catalogue.organization_affiliation
 (
     person_instance_id character varying(100) NOT NULL,
     organization_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (person_instance_id, organization_instance_id),
-    FOREIGN KEY (person_instance_id) REFERENCES public.person (instance_id),
-    FOREIGN KEY (organization_instance_id) REFERENCES public.organization (instance_id)
+    FOREIGN KEY (person_instance_id) REFERENCES metadata_catalogue.person (instance_id),
+    FOREIGN KEY (organization_instance_id) REFERENCES metadata_catalogue.organization (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.organization_identifier
+CREATE TABLE IF NOT EXISTS metadata_catalogue.organization_identifier
 (
     organization_instance_id character varying(100) NOT NULL,
     identifier_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (organization_instance_id,identifier_instance_id),
-    FOREIGN KEY (organization_instance_id) REFERENCES public.organization (instance_id),
-    FOREIGN KEY (identifier_instance_id) REFERENCES public.identifier (instance_id)
+    FOREIGN KEY (organization_instance_id) REFERENCES metadata_catalogue.organization (instance_id),
+    FOREIGN KEY (identifier_instance_id) REFERENCES metadata_catalogue.identifier (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.organization_element /* email, telephone */
+CREATE TABLE IF NOT EXISTS metadata_catalogue.organization_element /* email, telephone */
 (
     organization_instance_id character varying(100) NOT NULL,
     element_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (organization_instance_id, element_instance_id),
-    FOREIGN KEY (organization_instance_id) REFERENCES public.organization (instance_id),
-    FOREIGN KEY (element_instance_id) REFERENCES public.element (instance_id)
+    FOREIGN KEY (organization_instance_id) REFERENCES metadata_catalogue.organization (instance_id),
+    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id)
 );
 
 
-CREATE TABLE IF NOT EXISTS public.organization_contactpoint
+CREATE TABLE IF NOT EXISTS metadata_catalogue.organization_contactpoint
 (
     organization_instance_id character varying(100) NOT NULL,
     contactpoint_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (organization_instance_id, contactpoint_instance_id),
-    FOREIGN KEY (organization_instance_id) REFERENCES public.organization (instance_id),
-    FOREIGN KEY (contactpoint_instance_id) REFERENCES public.contactpoint (instance_id)
+    FOREIGN KEY (organization_instance_id) REFERENCES metadata_catalogue.organization (instance_id),
+    FOREIGN KEY (contactpoint_instance_id) REFERENCES metadata_catalogue.contactpoint (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.organization_owns
+CREATE TABLE IF NOT EXISTS metadata_catalogue.organization_owns
 (
     organization_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
     UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (organization_instance_id),
-    FOREIGN KEY (organization_instance_id) REFERENCES public.organization (instance_id)
+    FOREIGN KEY (organization_instance_id) REFERENCES metadata_catalogue.organization (instance_id)
 );
 
 /* DATAPRODUCT */
 
 
-CREATE TABLE IF NOT EXISTS public.dataproduct
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -398,48 +353,47 @@ CREATE TABLE IF NOT EXISTS public.dataproduct
     accessright character varying(1024),
     documentation character varying(1024),
     qualityAssurance character varying(1024),
-    has_quality_annotation character varying(1024),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.dataproduct_haspart
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_haspart
 (
     dataproduct1_instance_id character varying(100) NOT NULL,
     dataproduct2_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (dataproduct1_instance_id, dataproduct2_instance_id),
-    FOREIGN KEY (dataproduct1_instance_id) REFERENCES public.dataproduct (instance_id),
-    FOREIGN KEY (dataproduct2_instance_id) REFERENCES public.dataproduct (instance_id)
+    FOREIGN KEY (dataproduct1_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id),
+    FOREIGN KEY (dataproduct2_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.dataproduct_ispartof
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_ispartof
 (
     dataproduct1_instance_id character varying(100) NOT NULL,
     dataproduct2_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (dataproduct1_instance_id, dataproduct2_instance_id),
-    FOREIGN KEY (dataproduct1_instance_id) REFERENCES public.dataproduct (instance_id),
-    FOREIGN KEY (dataproduct2_instance_id) REFERENCES public.dataproduct (instance_id)
+    FOREIGN KEY (dataproduct1_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id),
+    FOREIGN KEY (dataproduct2_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.dataproduct_publisher
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_publisher
 (
     dataproduct_instance_id character varying(100) NOT NULL,
     organization_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (dataproduct_instance_id, organization_instance_id),
-    FOREIGN KEY (dataproduct_instance_id) REFERENCES public.dataproduct (instance_id),
-    FOREIGN KEY (organization_instance_id) REFERENCES public.organization (instance_id)
+    FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id),
+    FOREIGN KEY (organization_instance_id) REFERENCES metadata_catalogue.organization (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.dataproduct_contactpoint
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_contactpoint
 (
     dataproduct_instance_id character varying(100) NOT NULL,
     contactpoint_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (dataproduct_instance_id, contactpoint_instance_id),
-    FOREIGN KEY (dataproduct_instance_id) REFERENCES public.dataproduct (instance_id),
-    FOREIGN KEY (contactpoint_instance_id) REFERENCES public.contactpoint (instance_id)
+    FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id),
+    FOREIGN KEY (contactpoint_instance_id) REFERENCES metadata_catalogue.contactpoint (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.dataproduct_title
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_title
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -449,11 +403,11 @@ CREATE TABLE IF NOT EXISTS public.dataproduct_title
     lang character varying(50),
     dataproduct_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id),
-    FOREIGN KEY (dataproduct_instance_id) REFERENCES public.dataproduct (instance_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id),
+    FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.dataproduct_description
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_description
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -463,74 +417,74 @@ CREATE TABLE IF NOT EXISTS public.dataproduct_description
     lang character varying(50),
     dataproduct_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id),
-    FOREIGN KEY (dataproduct_instance_id) REFERENCES public.dataproduct (instance_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id),
+    FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.dataproduct_category
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_category
 (
     dataproduct_instance_id character varying(100) NOT NULL,
     category_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (dataproduct_instance_id, category_instance_id),
-    FOREIGN KEY (category_instance_id) REFERENCES public.category (instance_id),
-    FOREIGN KEY (dataproduct_instance_id) REFERENCES public.dataproduct (instance_id)
+    FOREIGN KEY (category_instance_id) REFERENCES metadata_catalogue.category (instance_id),
+    FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.dataproduct_provenance
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_provenance
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
     uid character varying(1024),
     version_id character varying(100),
-    provenance character varying(1024),
+    provenance text,
     dataproduct_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id),
-    FOREIGN KEY (dataproduct_instance_id) REFERENCES public.dataproduct (instance_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id),
+    FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.dataproduct_identifier
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_identifier
 (
     dataproduct_instance_id character varying(100) NOT NULL,
     identifier_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (dataproduct_instance_id,identifier_instance_id),
-    FOREIGN KEY (dataproduct_instance_id) REFERENCES public.dataproduct (instance_id),
-    FOREIGN KEY (identifier_instance_id) REFERENCES public.identifier (instance_id)
+    FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id),
+    FOREIGN KEY (identifier_instance_id) REFERENCES metadata_catalogue.identifier (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.dataproduct_spatial
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_spatial
 (
     dataproduct_instance_id character varying(100) NOT NULL,
     spatial_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (dataproduct_instance_id,spatial_instance_id),
-    FOREIGN KEY (dataproduct_instance_id) REFERENCES public.dataproduct (instance_id),
-    FOREIGN KEY (spatial_instance_id) REFERENCES public.spatial (instance_id)
+    FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id),
+    FOREIGN KEY (spatial_instance_id) REFERENCES metadata_catalogue.spatial (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.dataproduct_temporal
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_temporal
 (
     dataproduct_instance_id character varying(100) NOT NULL,
     temporal_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (dataproduct_instance_id,temporal_instance_id),
-    FOREIGN KEY (dataproduct_instance_id) REFERENCES public.dataproduct (instance_id),
-    FOREIGN KEY (temporal_instance_id) REFERENCES public.temporal (instance_id)
+    FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id),
+    FOREIGN KEY (temporal_instance_id) REFERENCES metadata_catalogue.temporal (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.dataproduct_relation
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_relation
 (
     dataproduct_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
     UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (dataproduct_instance_id),
-    FOREIGN KEY (dataproduct_instance_id) REFERENCES public.dataproduct (instance_id)
+    FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id)
 );
 
 
 /* DISTRIBUTION */
 
 
-CREATE TABLE IF NOT EXISTS public.distribution
+CREATE TABLE IF NOT EXISTS metadata_catalogue.distribution
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -543,19 +497,19 @@ CREATE TABLE IF NOT EXISTS public.distribution
     license character varying(1024),
     datapolicy character varying(1024),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.distribution_dataproduct
+CREATE TABLE IF NOT EXISTS metadata_catalogue.distribution_dataproduct
 (
     distribution_instance_id character varying(100) NOT NULL,
     dataproduct_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (dataproduct_instance_id, distribution_instance_id),
-    FOREIGN KEY (dataproduct_instance_id) REFERENCES public.dataproduct (instance_id),
-    FOREIGN KEY (distribution_instance_id) REFERENCES public.distribution (instance_id)
+    FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id),
+    FOREIGN KEY (distribution_instance_id) REFERENCES metadata_catalogue.distribution (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.distribution_title
+CREATE TABLE IF NOT EXISTS metadata_catalogue.distribution_title
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -565,11 +519,11 @@ CREATE TABLE IF NOT EXISTS public.distribution_title
     lang character varying(50),
     distribution_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id),
-    FOREIGN KEY (distribution_instance_id) REFERENCES public.distribution (instance_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id),
+    FOREIGN KEY (distribution_instance_id) REFERENCES metadata_catalogue.distribution (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.distribution_description
+CREATE TABLE IF NOT EXISTS metadata_catalogue.distribution_description
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -579,25 +533,25 @@ CREATE TABLE IF NOT EXISTS public.distribution_description
     lang character varying(50),
     distribution_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id),
-    FOREIGN KEY (distribution_instance_id) REFERENCES public.distribution (instance_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id),
+    FOREIGN KEY (distribution_instance_id) REFERENCES metadata_catalogue.distribution (instance_id)
 );
 
 
-CREATE TABLE IF NOT EXISTS public.distribution_element /* downloadurl, accessurl */
+CREATE TABLE IF NOT EXISTS metadata_catalogue.distribution_element /* downloadurl, accessurl */
 (
     distribution_instance_id character varying(100) NOT NULL,
     element_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (distribution_instance_id, element_instance_id),
-    FOREIGN KEY (distribution_instance_id) REFERENCES public.distribution (instance_id),
-    FOREIGN KEY (element_instance_id) REFERENCES public.element (instance_id)
+    FOREIGN KEY (distribution_instance_id) REFERENCES metadata_catalogue.distribution (instance_id),
+    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id)
 );
 
 
 /* WEBSERVICE */
 
 
-CREATE TABLE IF NOT EXISTS public.webservice
+CREATE TABLE IF NOT EXISTS metadata_catalogue.webservice
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -614,87 +568,87 @@ CREATE TABLE IF NOT EXISTS public.webservice
     provider character varying(100),
     aaaitypes character varying(1024),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
 /* conforms to or dataservice */
-CREATE TABLE IF NOT EXISTS public.webservice_distribution
+CREATE TABLE IF NOT EXISTS metadata_catalogue.webservice_distribution
 (
     distribution_instance_id character varying(100) NOT NULL,
     webservice_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (webservice_instance_id, distribution_instance_id),
-    FOREIGN KEY (webservice_instance_id) REFERENCES public.webservice (instance_id),
-    FOREIGN KEY (distribution_instance_id) REFERENCES public.distribution (instance_id)
+    FOREIGN KEY (webservice_instance_id) REFERENCES metadata_catalogue.webservice (instance_id),
+    FOREIGN KEY (distribution_instance_id) REFERENCES metadata_catalogue.distribution (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.webservice_identifier
+CREATE TABLE IF NOT EXISTS metadata_catalogue.webservice_identifier
 (
     webservice_instance_id character varying(100) NOT NULL,
     identifier_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (webservice_instance_id,identifier_instance_id),
-    FOREIGN KEY (webservice_instance_id) REFERENCES public.webservice (instance_id),
-    FOREIGN KEY (identifier_instance_id) REFERENCES public.identifier (instance_id)
+    FOREIGN KEY (webservice_instance_id) REFERENCES metadata_catalogue.webservice (instance_id),
+    FOREIGN KEY (identifier_instance_id) REFERENCES metadata_catalogue.identifier (instance_id)
 );
 
 
-CREATE TABLE IF NOT EXISTS public.webservice_contactpoint
+CREATE TABLE IF NOT EXISTS metadata_catalogue.webservice_contactpoint
 (
     webservice_instance_id character varying(100) NOT NULL,
     contactpoint_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (webservice_instance_id, contactpoint_instance_id),
-    FOREIGN KEY (webservice_instance_id) REFERENCES public.webservice (instance_id),
-    FOREIGN KEY (contactpoint_instance_id) REFERENCES public.contactpoint (instance_id)
+    FOREIGN KEY (webservice_instance_id) REFERENCES metadata_catalogue.webservice (instance_id),
+    FOREIGN KEY (contactpoint_instance_id) REFERENCES metadata_catalogue.contactpoint (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.webservice_category
+CREATE TABLE IF NOT EXISTS metadata_catalogue.webservice_category
 (
     category_instance_id character varying(100) NOT NULL,
     webservice_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (webservice_instance_id, category_instance_id),
-    FOREIGN KEY (webservice_instance_id) REFERENCES public.webservice (instance_id),
-    FOREIGN KEY (category_instance_id) REFERENCES public.category (instance_id)
+    FOREIGN KEY (webservice_instance_id) REFERENCES metadata_catalogue.webservice (instance_id),
+    FOREIGN KEY (category_instance_id) REFERENCES metadata_catalogue.category (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.webservice_element /* documentation */
+CREATE TABLE IF NOT EXISTS metadata_catalogue.webservice_element /* documentation */
 (
     webservice_instance_id character varying(100) NOT NULL,
     element_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (webservice_instance_id, element_instance_id),
-    FOREIGN KEY (webservice_instance_id) REFERENCES public.webservice (instance_id),
-    FOREIGN KEY (element_instance_id) REFERENCES public.element (instance_id)
+    FOREIGN KEY (webservice_instance_id) REFERENCES metadata_catalogue.webservice (instance_id),
+    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id)
 );
 
 
-CREATE TABLE IF NOT EXISTS public.webservice_spatial
+CREATE TABLE IF NOT EXISTS metadata_catalogue.webservice_spatial
 (
     webservice_instance_id character varying(100) NOT NULL,
     spatial_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (webservice_instance_id,spatial_instance_id),
-    FOREIGN KEY (webservice_instance_id) REFERENCES public.webservice (instance_id),
-    FOREIGN KEY (spatial_instance_id) REFERENCES public.spatial (instance_id)
+    FOREIGN KEY (webservice_instance_id) REFERENCES metadata_catalogue.webservice (instance_id),
+    FOREIGN KEY (spatial_instance_id) REFERENCES metadata_catalogue.spatial (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.webservice_temporal
+CREATE TABLE IF NOT EXISTS metadata_catalogue.webservice_temporal
 (
     webservice_instance_id character varying(100) NOT NULL,
     temporal_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (webservice_instance_id,temporal_instance_id),
-    FOREIGN KEY (webservice_instance_id) REFERENCES public.webservice (instance_id),
-    FOREIGN KEY (temporal_instance_id) REFERENCES public.temporal (instance_id)
+    FOREIGN KEY (webservice_instance_id) REFERENCES metadata_catalogue.webservice (instance_id),
+    FOREIGN KEY (temporal_instance_id) REFERENCES metadata_catalogue.temporal (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.webservice_relation
+CREATE TABLE IF NOT EXISTS metadata_catalogue.webservice_relation
 (
     webservice_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
     UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (webservice_instance_id, entity_instance_id),
-    FOREIGN KEY (webservice_instance_id) REFERENCES public.webservice (instance_id)
+    FOREIGN KEY (webservice_instance_id) REFERENCES metadata_catalogue.webservice (instance_id)
 );
 
 /* OPERATION */
-CREATE TABLE IF NOT EXISTS public.operation
+CREATE TABLE IF NOT EXISTS metadata_catalogue.operation
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -703,40 +657,40 @@ CREATE TABLE IF NOT EXISTS public.operation
     method character varying(1024),
     template text,
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.operation_webservice
+CREATE TABLE IF NOT EXISTS metadata_catalogue.operation_webservice
 (
     operation_instance_id character varying(100) NOT NULL,
     webservice_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (webservice_instance_id, operation_instance_id),
-    FOREIGN KEY (webservice_instance_id) REFERENCES public.webservice (instance_id),
-    FOREIGN KEY (operation_instance_id) REFERENCES public.operation (instance_id)
+    FOREIGN KEY (webservice_instance_id) REFERENCES metadata_catalogue.webservice (instance_id),
+    FOREIGN KEY (operation_instance_id) REFERENCES metadata_catalogue.operation (instance_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.operation_distribution
+CREATE TABLE IF NOT EXISTS metadata_catalogue.operation_distribution
 (
     operation_instance_id character varying(100) NOT NULL,
     distribution_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (distribution_instance_id, operation_instance_id),
-    FOREIGN KEY (distribution_instance_id) REFERENCES public.distribution (instance_id),
-    FOREIGN KEY (operation_instance_id) REFERENCES public.operation (instance_id)
+    FOREIGN KEY (distribution_instance_id) REFERENCES metadata_catalogue.distribution (instance_id),
+    FOREIGN KEY (operation_instance_id) REFERENCES metadata_catalogue.operation (instance_id)
 );
 
 
-CREATE TABLE IF NOT EXISTS public.operation_element /* returns */
+CREATE TABLE IF NOT EXISTS metadata_catalogue.operation_element /* returns */
 (
     operation_instance_id character varying(100) NOT NULL,
     element_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (operation_instance_id, element_instance_id),
-    FOREIGN KEY (operation_instance_id) REFERENCES public.operation (instance_id),
-    FOREIGN KEY (element_instance_id) REFERENCES public.element (instance_id)
+    FOREIGN KEY (operation_instance_id) REFERENCES metadata_catalogue.operation (instance_id),
+    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id)
 );
 
 /* INPUT MAPPING */
 
-CREATE TABLE IF NOT EXISTS public.mapping
+CREATE TABLE IF NOT EXISTS metadata_catalogue.mapping
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -755,32 +709,32 @@ CREATE TABLE IF NOT EXISTS public.mapping
     multiple_values character varying(1024),
     ismappingof character varying(100),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id)  ON DELETE CASCADE
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)  ON DELETE CASCADE
 );
 
 
-CREATE TABLE IF NOT EXISTS public.operation_mapping
+CREATE TABLE IF NOT EXISTS metadata_catalogue.operation_mapping
 (
     operation_instance_id character varying(100) NOT NULL,
     mapping_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (operation_instance_id,mapping_instance_id),
-    FOREIGN KEY (operation_instance_id) REFERENCES public.operation (instance_id)  ON DELETE CASCADE,
-    FOREIGN KEY (mapping_instance_id) REFERENCES public.mapping (instance_id)  ON DELETE CASCADE
+    FOREIGN KEY (operation_instance_id) REFERENCES metadata_catalogue.operation (instance_id)  ON DELETE CASCADE,
+    FOREIGN KEY (mapping_instance_id) REFERENCES metadata_catalogue.mapping (instance_id)  ON DELETE CASCADE
 );
 
 
-CREATE TABLE IF NOT EXISTS public.mapping_element /* paramvalue */
+CREATE TABLE IF NOT EXISTS metadata_catalogue.mapping_element /* paramvalue */
 (
     mapping_instance_id character varying(100) NOT NULL,
     element_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (mapping_instance_id, element_instance_id),
-    FOREIGN KEY (mapping_instance_id) REFERENCES public.mapping (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (element_instance_id) REFERENCES public.element (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (mapping_instance_id) REFERENCES metadata_catalogue.mapping (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id) ON DELETE CASCADE
 );
 
 /* OUTPUT MAPPING */
 
-CREATE TABLE IF NOT EXISTS public.output_mapping
+CREATE TABLE IF NOT EXISTS metadata_catalogue.output_mapping
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -793,11 +747,11 @@ CREATE TABLE IF NOT EXISTS public.output_mapping
     property character varying(1024),
     valuepattern character varying(1024),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id) ON DELETE CASCADE
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id) ON DELETE CASCADE
 );
 
 /* PAYLOAD */
-CREATE TABLE IF NOT EXISTS public.payload
+CREATE TABLE IF NOT EXISTS metadata_catalogue.payload
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -808,30 +762,30 @@ CREATE TABLE IF NOT EXISTS public.payload
     content_type character varying(255),
     schema_definition text,
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id) ON DELETE CASCADE
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.operation_payload
+CREATE TABLE IF NOT EXISTS metadata_catalogue.operation_payload
 (
     operation_instance_id character varying(100) NOT NULL,
     payload_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (operation_instance_id, payload_instance_id),
-    FOREIGN KEY (operation_instance_id) REFERENCES public.operation (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (payload_instance_id) REFERENCES public.payload (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (operation_instance_id) REFERENCES metadata_catalogue.operation (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (payload_instance_id) REFERENCES metadata_catalogue.payload (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.payload_output_mapping
+CREATE TABLE IF NOT EXISTS metadata_catalogue.payload_output_mapping
 (
     payload_instance_id character varying(100) NOT NULL,
     output_mapping_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (payload_instance_id, output_mapping_instance_id),
-    FOREIGN KEY (payload_instance_id) REFERENCES public.payload (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (output_mapping_instance_id) REFERENCES public.output_mapping (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (payload_instance_id) REFERENCES metadata_catalogue.payload (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (output_mapping_instance_id) REFERENCES metadata_catalogue.output_mapping (instance_id) ON DELETE CASCADE
 );
 
 /* SOFTWAREAPPLICATION */
 
-CREATE TABLE IF NOT EXISTS public.softwareapplication
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -847,10 +801,10 @@ CREATE TABLE IF NOT EXISTS public.softwareapplication
     installURL character varying(1024),
     mainentityofpage character varying(1024),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id) ON DELETE CASCADE
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.parameter
+CREATE TABLE IF NOT EXISTS metadata_catalogue.parameter
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -860,59 +814,59 @@ CREATE TABLE IF NOT EXISTS public.parameter
     conformsto character varying(1024),
     action character varying(1024),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id) ON DELETE CASCADE
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.softwareapplication_contactpoint
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_contactpoint
 (
     softwareapplication_instance_id character varying(100) NOT NULL,
     contactpoint_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (softwareapplication_instance_id, contactpoint_instance_id),
-    FOREIGN KEY (softwareapplication_instance_id) REFERENCES public.softwareapplication (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (contactpoint_instance_id) REFERENCES public.contactpoint (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (contactpoint_instance_id) REFERENCES metadata_catalogue.contactpoint (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.softwareapplication_identifier
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_identifier
 (
     softwareapplication_instance_id character varying(100) NOT NULL,
     identifier_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (softwareapplication_instance_id,identifier_instance_id),
-    FOREIGN KEY (softwareapplication_instance_id) REFERENCES public.softwareapplication (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (identifier_instance_id) REFERENCES public.identifier (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (identifier_instance_id) REFERENCES metadata_catalogue.identifier (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.softwareapplication_parameters
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_parameters
 (
     softwareapplication_instance_id character varying(100) NOT NULL,
     parameter_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (softwareapplication_instance_id,parameter_instance_id),
-    FOREIGN KEY (softwareapplication_instance_id) REFERENCES public.softwareapplication (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (parameter_instance_id) REFERENCES public.parameter (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (parameter_instance_id) REFERENCES metadata_catalogue.parameter (instance_id) ON DELETE CASCADE
 );
 
 
-CREATE TABLE IF NOT EXISTS public.softwareapplication_operation
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_operation
 (
     softwareapplication_instance_id character varying(100) NOT NULL,
     operation_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (softwareapplication_instance_id, operation_instance_id),
-    FOREIGN KEY (softwareapplication_instance_id) REFERENCES public.softwareapplication (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (operation_instance_id) REFERENCES public.operation (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (operation_instance_id) REFERENCES metadata_catalogue.operation (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.softwareapplication_category
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_category
 (
     category_instance_id character varying(100) NOT NULL,
     softwareapplication_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (softwareapplication_instance_id, category_instance_id),
-    FOREIGN KEY (softwareapplication_instance_id) REFERENCES public.softwareapplication (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (category_instance_id) REFERENCES public.category (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_instance_id) REFERENCES metadata_catalogue.category (instance_id) ON DELETE CASCADE
 );
 
 
 /* SOFTWARESOURCECODE */
 
-CREATE TABLE IF NOT EXISTS public.softwaresourcecode
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -928,49 +882,49 @@ CREATE TABLE IF NOT EXISTS public.softwaresourcecode
     coderepository character varying(1024),
     mainentityofpage character varying(1024),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id) ON DELETE CASCADE
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.softwaresourcecode_contactpoint
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_contactpoint
 (
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     contactpoint_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (softwaresourcecode_instance_id, contactpoint_instance_id),
-    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES public.softwaresourcecode (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (contactpoint_instance_id) REFERENCES public.contactpoint (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (contactpoint_instance_id) REFERENCES metadata_catalogue.contactpoint (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.softwaresourcecode_identifier
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_identifier
 (
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     identifier_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (softwaresourcecode_instance_id,identifier_instance_id),
-    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES public.softwaresourcecode (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (identifier_instance_id) REFERENCES public.identifier (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (identifier_instance_id) REFERENCES metadata_catalogue.identifier (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.softwaresourcecode_element /* programminglanguage */
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_element /* programminglanguage */
 (
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     element_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (softwaresourcecode_instance_id, element_instance_id),
-    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES public.softwaresourcecode (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (element_instance_id) REFERENCES public.element (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.softwaresourcecode_category
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_category
 (
     category_instance_id character varying(100) NOT NULL,
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (softwaresourcecode_instance_id, category_instance_id),
-    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES public.softwaresourcecode (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (category_instance_id) REFERENCES public.category (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_instance_id) REFERENCES metadata_catalogue.category (instance_id) ON DELETE CASCADE
 );
 
 
 /* SERVICE */
 
-CREATE TABLE IF NOT EXISTS public.service
+CREATE TABLE IF NOT EXISTS metadata_catalogue.service
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -983,69 +937,69 @@ CREATE TABLE IF NOT EXISTS public.service
     keywords text,
     servicecontract character varying(100),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id) ON DELETE CASCADE
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.service_identifier
+CREATE TABLE IF NOT EXISTS metadata_catalogue.service_identifier
 (
     service_instance_id character varying(100) NOT NULL,
     identifier_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (service_instance_id,identifier_instance_id),
-    FOREIGN KEY (service_instance_id) REFERENCES public.service (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (identifier_instance_id) REFERENCES public.identifier (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (service_instance_id) REFERENCES metadata_catalogue.service (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (identifier_instance_id) REFERENCES metadata_catalogue.identifier (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.service_contactpoint
+CREATE TABLE IF NOT EXISTS metadata_catalogue.service_contactpoint
 (
     service_instance_id character varying(100) NOT NULL,
     contactpoint_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (service_instance_id, contactpoint_instance_id),
-    FOREIGN KEY (service_instance_id) REFERENCES public.service (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (contactpoint_instance_id) REFERENCES public.contactpoint (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (service_instance_id) REFERENCES metadata_catalogue.service (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (contactpoint_instance_id) REFERENCES metadata_catalogue.contactpoint (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.service_spatial
+CREATE TABLE IF NOT EXISTS metadata_catalogue.service_spatial
 (
     service_instance_id character varying(100) NOT NULL,
     spatial_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (service_instance_id,spatial_instance_id),
-    FOREIGN KEY (service_instance_id) REFERENCES public.service (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (spatial_instance_id) REFERENCES public.spatial (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (service_instance_id) REFERENCES metadata_catalogue.service (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (spatial_instance_id) REFERENCES metadata_catalogue.spatial (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.service_temporal
+CREATE TABLE IF NOT EXISTS metadata_catalogue.service_temporal
 (
     service_instance_id character varying(100) NOT NULL,
     temporal_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (service_instance_id,temporal_instance_id),
-    FOREIGN KEY (service_instance_id) REFERENCES public.service (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (temporal_instance_id) REFERENCES public.temporal (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (service_instance_id) REFERENCES metadata_catalogue.service (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (temporal_instance_id) REFERENCES metadata_catalogue.temporal (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.service_category
+CREATE TABLE IF NOT EXISTS metadata_catalogue.service_category
 (
     category_instance_id character varying(100) NOT NULL,
     service_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (service_instance_id, category_instance_id),
-    FOREIGN KEY (service_instance_id) REFERENCES public.service (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (category_instance_id) REFERENCES public.category (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (service_instance_id) REFERENCES metadata_catalogue.service (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_instance_id) REFERENCES metadata_catalogue.category (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.service_provider /*person or organization*/
+CREATE TABLE IF NOT EXISTS metadata_catalogue.service_provider /*person or organization*/
 (
     service_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
     UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (service_instance_id),
-    FOREIGN KEY (service_instance_id) REFERENCES public.service (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (service_instance_id) REFERENCES metadata_catalogue.service (instance_id) ON DELETE CASCADE
 );
 
 
 
 /* PUBLICATION */
 
-CREATE TABLE IF NOT EXISTS public.publication
+CREATE TABLE IF NOT EXISTS metadata_catalogue.publication
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -1062,42 +1016,42 @@ CREATE TABLE IF NOT EXISTS public.publication
     author character varying(1024),
     publisher character varying(100),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id) ON DELETE CASCADE
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.publication_identifier
+CREATE TABLE IF NOT EXISTS metadata_catalogue.publication_identifier
 (
     publication_instance_id character varying(100) NOT NULL,
     identifier_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (publication_instance_id,identifier_instance_id),
-    FOREIGN KEY (publication_instance_id) REFERENCES public.publication (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (identifier_instance_id) REFERENCES public.identifier (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (publication_instance_id) REFERENCES metadata_catalogue.publication (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (identifier_instance_id) REFERENCES metadata_catalogue.identifier (instance_id) ON DELETE CASCADE
 );
 
 
-CREATE TABLE IF NOT EXISTS public.publication_contributor
+CREATE TABLE IF NOT EXISTS metadata_catalogue.publication_contributor
 (
     person_instance_id character varying(100) NOT NULL,
     publication_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (publication_instance_id, person_instance_id),
-    FOREIGN KEY (publication_instance_id) REFERENCES public.publication (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (person_instance_id) REFERENCES public.person (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (publication_instance_id) REFERENCES metadata_catalogue.publication (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (person_instance_id) REFERENCES metadata_catalogue.person (instance_id) ON DELETE CASCADE
 );
 
 
-CREATE TABLE IF NOT EXISTS public.publication_category
+CREATE TABLE IF NOT EXISTS metadata_catalogue.publication_category
 (
     category_instance_id character varying(100) NOT NULL,
     publication_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (publication_instance_id, category_instance_id),
-    FOREIGN KEY (publication_instance_id) REFERENCES public.publication (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (category_instance_id) REFERENCES public.category (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (publication_instance_id) REFERENCES metadata_catalogue.publication (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_instance_id) REFERENCES metadata_catalogue.category (instance_id) ON DELETE CASCADE
 );
 
 
 /* FACILITY */
 
-CREATE TABLE IF NOT EXISTS public.facility
+CREATE TABLE IF NOT EXISTS metadata_catalogue.facility
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -1109,68 +1063,68 @@ CREATE TABLE IF NOT EXISTS public.facility
     type character(1024),
     keywords text,
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id) ON DELETE CASCADE
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.facility_address
+CREATE TABLE IF NOT EXISTS metadata_catalogue.facility_address
 (
     facility_instance_id character varying(100) NOT NULL,
     address_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (facility_instance_id, address_instance_id),
-    FOREIGN KEY (facility_instance_id) REFERENCES public.facility (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (address_instance_id) REFERENCES public.address (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (facility_instance_id) REFERENCES metadata_catalogue.facility (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (address_instance_id) REFERENCES metadata_catalogue.address (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.facility_contactpoint
+CREATE TABLE IF NOT EXISTS metadata_catalogue.facility_contactpoint
 (
     facility_instance_id character varying(100) NOT NULL,
     contactpoint_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (facility_instance_id, contactpoint_instance_id),
-    FOREIGN KEY (facility_instance_id) REFERENCES public.facility (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (contactpoint_instance_id) REFERENCES public.contactpoint (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (facility_instance_id) REFERENCES metadata_catalogue.facility (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (contactpoint_instance_id) REFERENCES metadata_catalogue.contactpoint (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.facility_element /* pageurl */
+CREATE TABLE IF NOT EXISTS metadata_catalogue.facility_element /* pageurl */
 (
     facility_instance_id character varying(100) NOT NULL,
     element_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (facility_instance_id, element_instance_id),
-    FOREIGN KEY (facility_instance_id) REFERENCES public.facility (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (element_instance_id) REFERENCES public.element (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (facility_instance_id) REFERENCES metadata_catalogue.facility (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id) ON DELETE CASCADE
 );
 
 
-CREATE TABLE IF NOT EXISTS public.facility_ispartof
+CREATE TABLE IF NOT EXISTS metadata_catalogue.facility_ispartof
 (
     facility1_instance_id character varying(100) NOT NULL,
     facility2_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (facility1_instance_id, facility2_instance_id),
-    FOREIGN KEY (facility1_instance_id) REFERENCES public.facility (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (facility2_instance_id) REFERENCES public.facility (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (facility1_instance_id) REFERENCES metadata_catalogue.facility (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (facility2_instance_id) REFERENCES metadata_catalogue.facility (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.facility_category
+CREATE TABLE IF NOT EXISTS metadata_catalogue.facility_category
 (
     category_instance_id character varying(100) NOT NULL,
     facility_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (facility_instance_id, category_instance_id),
-    FOREIGN KEY (facility_instance_id) REFERENCES public.facility (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (category_instance_id) REFERENCES public.category (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (facility_instance_id) REFERENCES metadata_catalogue.facility (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_instance_id) REFERENCES metadata_catalogue.category (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.facility_spatial
+CREATE TABLE IF NOT EXISTS metadata_catalogue.facility_spatial
 (
     facility_instance_id character varying(100) NOT NULL,
     spatial_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (facility_instance_id,spatial_instance_id),
-    FOREIGN KEY (facility_instance_id) REFERENCES public.facility (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (spatial_instance_id) REFERENCES public.spatial (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (facility_instance_id) REFERENCES metadata_catalogue.facility (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (spatial_instance_id) REFERENCES metadata_catalogue.spatial (instance_id) ON DELETE CASCADE
 );
 
 
 /* EQUIPMENT */
 
-CREATE TABLE IF NOT EXISTS public.equipment
+CREATE TABLE IF NOT EXISTS metadata_catalogue.equipment
 (
     instance_id character varying(100) NOT NULL,
     meta_id character varying(100),
@@ -1190,74 +1144,74 @@ CREATE TABLE IF NOT EXISTS public.equipment
     sampleperiod character varying(100),
     serialnumber character varying(1024),
     PRIMARY KEY (instance_id),
-    FOREIGN KEY (version_id) REFERENCES public.versioningstatus (version_id) ON DELETE CASCADE,
-    FOREIGN KEY (creator) REFERENCES public.organization (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id) ON DELETE CASCADE,
+    FOREIGN KEY (creator) REFERENCES metadata_catalogue.organization (instance_id) ON DELETE CASCADE
 );
 
 
-CREATE TABLE IF NOT EXISTS public.equipment_contactpoint
+CREATE TABLE IF NOT EXISTS metadata_catalogue.equipment_contactpoint
 (
     equipment_instance_id character varying(100) NOT NULL,
     contactpoint_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (equipment_instance_id, contactpoint_instance_id),
-    FOREIGN KEY (equipment_instance_id) REFERENCES public.equipment (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (contactpoint_instance_id) REFERENCES public.contactpoint (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (equipment_instance_id) REFERENCES metadata_catalogue.equipment (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (contactpoint_instance_id) REFERENCES metadata_catalogue.contactpoint (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.equipment_element /* pageurl */
+CREATE TABLE IF NOT EXISTS metadata_catalogue.equipment_element /* pageurl */
 (
     equipment_instance_id character varying(100) NOT NULL,
     element_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (equipment_instance_id, element_instance_id),
-    FOREIGN KEY (equipment_instance_id) REFERENCES public.equipment (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (element_instance_id) REFERENCES public.element (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (equipment_instance_id) REFERENCES metadata_catalogue.equipment (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.equipment_spatial
+CREATE TABLE IF NOT EXISTS metadata_catalogue.equipment_spatial
 (
     equipment_instance_id character varying(100) NOT NULL,
     spatial_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (equipment_instance_id,spatial_instance_id),
-    FOREIGN KEY (equipment_instance_id) REFERENCES public.equipment (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (spatial_instance_id) REFERENCES public.spatial (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (equipment_instance_id) REFERENCES metadata_catalogue.equipment (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (spatial_instance_id) REFERENCES metadata_catalogue.spatial (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.equipment_temporal
+CREATE TABLE IF NOT EXISTS metadata_catalogue.equipment_temporal
 (
     equipment_instance_id character varying(100) NOT NULL,
     temporal_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (equipment_instance_id,temporal_instance_id),
-    FOREIGN KEY (equipment_instance_id) REFERENCES public.equipment (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (temporal_instance_id) REFERENCES public.temporal (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (equipment_instance_id) REFERENCES metadata_catalogue.equipment (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (temporal_instance_id) REFERENCES metadata_catalogue.temporal (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.equipment_category
+CREATE TABLE IF NOT EXISTS metadata_catalogue.equipment_category
 (
     category_instance_id character varying(100) NOT NULL,
     equipment_instance_id character varying(100) NOT NULL,
     PRIMARY KEY (equipment_instance_id, category_instance_id),
-    FOREIGN KEY (equipment_instance_id) REFERENCES public.equipment (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (category_instance_id) REFERENCES public.category (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (equipment_instance_id) REFERENCES metadata_catalogue.equipment (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_instance_id) REFERENCES metadata_catalogue.category (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.equipment_ispartof /*equipment or facility*/
+CREATE TABLE IF NOT EXISTS metadata_catalogue.equipment_ispartof /*equipment or facility*/
 (
     equipment_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
     UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (equipment_instance_id),
-    FOREIGN KEY (equipment_instance_id) REFERENCES public.equipment (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (equipment_instance_id) REFERENCES metadata_catalogue.equipment (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.equipment_relation
+CREATE TABLE IF NOT EXISTS metadata_catalogue.equipment_relation
 (
     equipment_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
     UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (equipment_instance_id),
-    FOREIGN KEY (equipment_instance_id) REFERENCES public.equipment (instance_id) ON DELETE CASCADE
+    FOREIGN KEY (equipment_instance_id) REFERENCES metadata_catalogue.equipment (instance_id) ON DELETE CASCADE
 );
 
 END;
