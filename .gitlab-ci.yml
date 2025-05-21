@@ -10,9 +10,9 @@ stages:
 build metadata database:
   stage: build
   before_script:
-    - echo "$ADMIN_REFACTORING_INSERT" >> ./build-and-clean/postgis-settings/users.sql
-    - echo "$TESTER_REFACTORING_INSERT" >> ./build-and-clean/postgis-settings/testers.sql
-    - echo "$GROUPS_REFACTORING_INSERT" >> ./build-and-clean/postgis-settings/groups.sql
+    - echo "$ADMIN_REFACTORING_INSERT" >> ./build-and-clean/postgis-setting/users.sql
+    - echo "$TESTER_REFACTORING_INSERT" >> ./build-and-clean/postgis-setting/testers.sql
+    - echo "$GROUPS_REFACTORING_INSERT" >> ./build-and-clean/postgis-setting/groups.sql
     - echo "$GROUPS_USERS_INSERT" >> ./build-and-clean/postgis-setting/relations.sql
     - sh ./initdb.sh
   script :
@@ -34,9 +34,9 @@ push metadata database:
 build restore database:
   stage: build
   before_script:
-    - echo "$ADMIN_REFACTORING_INSERT" >> ./build-and-clean/postgis-settings/users.sql
-    - echo "$TESTER_REFACTORING_INSERT" >> ./build-and-clean/postgis-settings/testers.sql
-    - echo "$GROUPS_REFACTORING_INSERT" >> ./build-and-clean/postgis-settings/groups.sql
+    - echo "$ADMIN_REFACTORING_INSERT" >> ./build-and-clean/postgis-setting/users.sql
+    - echo "$TESTER_REFACTORING_INSERT" >> ./build-and-clean/postgis-setting/testers.sql
+    - echo "$GROUPS_REFACTORING_INSERT" >> ./build-and-clean/postgis-setting/groups.sql
     - echo "$GROUPS_USERS_INSERT" >> ./build-and-clean/postgis-setting/relations.sql
     - sh ./cleandb.sh
   script :
@@ -58,9 +58,9 @@ push restore database:
 build spilo:
   stage: build
   before_script:
-    - echo "$ADMIN_REFACTORING_INSERT" >> ./build-and-clean/postgis-settings/users.sql
-    - echo "$TESTER_REFACTORING_INSERT" >> ./build-and-clean/postgis-settings/testers.sql
-    - echo "$GROUPS_REFACTORING_INSERT" >> ./build-and-clean/postgis-settings/groups.sql
+    - echo "$ADMIN_REFACTORING_INSERT" >> ./build-and-clean/postgis-setting/users.sql
+    - echo "$TESTER_REFACTORING_INSERT" >> ./build-and-clean/postgis-setting/testers.sql
+    - echo "$GROUPS_REFACTORING_INSERT" >> ./build-and-clean/postgis-setting/groups.sql
     - echo "$GROUPS_USERS_INSERT" >> ./build-and-clean/postgis-setting/relations.sql
     - sh ./cleandb.sh
   script :
