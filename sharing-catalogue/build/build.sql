@@ -1,9 +1,9 @@
-\connect postgres
+\connect metadata_catalogue
 
  SET client_encoding = 'UTF8';
  SET standard_conforming_strings = off;
  SET escape_string_warning = off;
 
 
- CREATE DATABASE sharing_catalogue  OWNER = postgres;
+ CREATE SCHEMA sharing_catalogue AUTHORIZATION postgres;
 

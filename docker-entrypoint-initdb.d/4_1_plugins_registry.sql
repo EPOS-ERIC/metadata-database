@@ -1,10 +1,9 @@
-\connect converter_catalogue;
-\connect converter_catalogue;
+\connect metadata_catalogue;
 BEGIN;
 
 CREATE TYPE version_type_enum AS ENUM ('branch', 'tag');
 
-CREATE TABLE plugin (
+CREATE TABLE converter_catalogue.plugin (
 	id character varying(1024) NOT NULL PRIMARY KEY,	-- the id of the plugin (generated when the plugin is created)
 	name VARCHAR(1024) NOT NULL,						-- the name of the plugin
 	description VARCHAR(1024) NOT NULL,					-- a description of the plugin
@@ -19,9 +18,9 @@ CREATE TABLE plugin (
 	UNIQUE(version, version_type, repository, runtime, executable, arguments)
 );
 
-CREATE TABLE plugin_relations (
+CREATE TABLE converter_catalogue.plugin_relations (
 	id character varying(1024) NOT NULL PRIMARY KEY,									-- the id of the relation (generated when the relation is created)
-	plugin_id character varying(1024) NOT NULL REFERENCES plugin(id) ON DELETE CASCADE,	-- the id of the plugin (from the plugin table)
+	plugin_id character varying(1024) NOT NULL REFERENCES converter_catalogue.plugin(id) ON DELETE CASCADE,	-- the id of the plugin (from the plugin table)
 	relation_id VARCHAR(1024) NOT NULL,													-- the instanceId of the distribution
 	input_format VARCHAR(1024) NOT NULL,												-- the file format expected by the plugin for the input
 	output_format VARCHAR(1024) NOT NULL,												-- the file format expected as the output from the plugin execution

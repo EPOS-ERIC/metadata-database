@@ -1,5 +1,4 @@
-\connect processing_catalogue;
-\connect processing_catalogue;
+\connect metadata_catalogue;
 BEGIN;
 
 CREATE TYPE processing_unit_status AS ENUM ('READY', 'CREATING', 'UPDATING', 'DELETING', 'NOT_READY');
@@ -10,7 +9,7 @@ CREATE CAST (varchar AS processing_unit_status) WITH INOUT AS IMPLICIT;
 
 CREATE CAST (varchar AS processing_item_status) WITH INOUT AS IMPLICIT;
 
-CREATE TABLE IF NOT EXISTS public.processing_unit
+CREATE TABLE IF NOT EXISTS processing_catalogue.processing_unit
 (
     id character varying(1024) NOT NULL,
     name character varying(1024) NOT NULL,
@@ -26,7 +25,7 @@ CREATE TABLE IF NOT EXISTS public.processing_unit
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS public.resource_item
+CREATE TABLE IF NOT EXISTS processing_catalogue.resource_item
 (
     id character varying(1024) NOT NULL,
     processing_unit_id character varying(1024),
@@ -41,8 +40,8 @@ CREATE TABLE IF NOT EXISTS public.resource_item
     PRIMARY KEY (id)
 );
 
-ALTER TABLE IF EXISTS  public.resource_item
+ALTER TABLE IF EXISTS  processing_catalogue.resource_item
     ADD FOREIGN KEY (processing_unit_id)
-    references public.processing_unit (id);
+    references processing_catalogue.processing_unit (id);
 
 END;

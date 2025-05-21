@@ -1,7 +1,7 @@
-\connect sharing_catalogue;
+\connect metadata_catalogue;
 BEGIN;
 
-CREATE TABLE IF NOT EXISTS public.configurations
+CREATE TABLE IF NOT EXISTS sharing_catalogue.configurations
 (
     id character varying(1024) NOT NULL,
     configuration text NOT NULL,
