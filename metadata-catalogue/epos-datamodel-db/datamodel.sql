@@ -1073,16 +1073,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_category
 );
 
 
-CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_citation
-(
-    element_instance_id character varying(100) NOT NULL,
-    softwaresourcecode_instance_id character varying(100) NOT NULL,
-    PRIMARY KEY (softwaresourcecode_instance_id, element_instance_id),
-    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id) ON DELETE CASCADE,
-    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id) ON DELETE CASCADE
-);
-
-
 CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_author
 (
     softwaresourcecode_instance_id character varying(100) NOT NULL,
