@@ -929,7 +929,7 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_category
     FOREIGN KEY (category_instance_id) REFERENCES metadata_catalogue.category (instance_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_citation
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_element
 (
     element_instance_id character varying(100) NOT NULL,
     softwareapplication_instance_id character varying(100) NOT NULL,
