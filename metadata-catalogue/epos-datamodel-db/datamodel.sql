@@ -77,7 +77,34 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.quantitativevalue
     FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
-CREATE TYPE elementtype AS ENUM ('TELEPHONE', 'EMAIL', 'LANGUAGE', 'DOWNLOADURL', 'ACCESSURL','DOCUMENTATION', 'RETURNS', 'PARAMVALUE', 'PROGRAMMINGLANGUAGE', 'PAGEURL');
+/* ATTRIBUTION */
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.attribution
+(
+    instance_id character varying(100) NOT NULL,
+    meta_id character varying(100),
+    uid character varying(1024),
+    version_id character varying(100),
+    agent_id character varying(1024),
+    agent_type character varying(1024),
+    PRIMARY KEY (instance_id),
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.attribution_role
+(
+    instance_id character varying(100) NOT NULL,
+    meta_id character varying(100),
+    uid character varying(1024),
+    version_id character varying(100),
+    attribution_instance_id character varying(1024),
+    roletype character varying(1024),
+    PRIMARY KEY (instance_id),
+    FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id),
+    FOREIGN KEY (attribution_instance_id) REFERENCES metadata_catalogue.attribution (instance_id)
+);
+
+CREATE TYPE elementtype AS ENUM ('TELEPHONE', 'EMAIL', 'LANGUAGE', 'DOWNLOADURL', 'ACCESSURL','DOCUMENTATION', 'RETURNS', 'PARAMVALUE', 'PROGRAMMINGLANGUAGE', 'PAGEURL', 'CITATION', 'OPERATINGSYSTEM', 'REFERENCEDBY', 'LANDINGPAGE', 'VARIABLEMEASURED');
 
 CREATE TABLE IF NOT EXISTS metadata_catalogue.element
 (
@@ -356,6 +383,25 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct
     FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
 
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_attribution
+(
+    dataproduct_instance_id character varying(100) NOT NULL,
+    attribution_instance_id character varying(100) NOT NULL,
+    PRIMARY KEY (dataproduct_instance_id, attribution_instance_id),
+    FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id),
+    FOREIGN KEY (attribution_instance_id) REFERENCES metadata_catalogue.attribution (instance_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_source
+(
+    dataproduct1_instance_id character varying(100) NOT NULL,
+    dataproduct2_instance_id character varying(100) NOT NULL,
+    PRIMARY KEY (dataproduct1_instance_id, dataproduct2_instance_id),
+    FOREIGN KEY (dataproduct1_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id),
+    FOREIGN KEY (dataproduct2_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id)
+);
+
 CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_haspart
 (
     dataproduct1_instance_id character varying(100) NOT NULL,
@@ -479,6 +525,15 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_relation
     FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id)
 );
 
+CREATE TABLE IF NOT EXISTS metadata_catalogue.dataproduct_element /* referencedby, landingpage, variablemeasured */
+(
+    dataproduct_instance_id character varying(100) NOT NULL,
+    element_instance_id character varying(100) NOT NULL,
+    PRIMARY KEY (dataproduct_instance_id, element_instance_id),
+    FOREIGN KEY (dataproduct_instance_id) REFERENCES metadata_catalogue.dataproduct (instance_id),
+    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id)
+);
+
 
 /* DISTRIBUTION */
 
@@ -495,6 +550,9 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.distribution
     format character varying(1024),
     license character varying(1024),
     datapolicy character varying(1024),
+    mediatype character varying(1024),
+    maturity character varying(1024),
+    bytesize character varying(1024),
     PRIMARY KEY (instance_id),
     FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)
 );
@@ -706,6 +764,7 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.mapping
     valuepattern character varying(1024),
     read_only_value character varying(1024),
     multiple_values character varying(1024),
+    healthcheckvalue character varying(1024),
     ismappingof character varying(100),
     PRIMARY KEY (instance_id),
     FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id)  ON DELETE CASCADE
@@ -799,6 +858,14 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication
     requirements character varying(1024),
     installURL character varying(1024),
     mainentityofpage character varying(1024),
+    softwarestatus character varying(1024),
+    spatial text,
+    temporal text,
+    filesize character varying(1024),
+    timerequired character varying(1024),
+    processorrequirements character varying(1024),
+    memoryrequirements character varying(1024),
+    storagerequirements character varying(1024),
     PRIMARY KEY (instance_id),
     FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id) ON DELETE CASCADE
 );
@@ -862,6 +929,85 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_category
     FOREIGN KEY (category_instance_id) REFERENCES metadata_catalogue.category (instance_id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_citation
+(
+    element_instance_id character varying(100) NOT NULL,
+    softwareapplication_instance_id character varying(100) NOT NULL,
+    PRIMARY KEY (softwareapplication_instance_id, element_instance_id),
+    FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_author
+(
+    softwareapplication_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwareapplication_instance_id),
+    FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_contributor
+(
+    softwareapplication_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwareapplication_instance_id),
+    FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_funder
+(
+    softwareapplication_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwareapplication_instance_id),
+    FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_maintainer
+(
+    softwareapplication_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwareapplication_instance_id),
+    FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_provider
+(
+    softwareapplication_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwareapplication_instance_id),
+    FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_publisher
+(
+    softwareapplication_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwareapplication_instance_id),
+    FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_creator
+(
+    softwareapplication_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwareapplication_instance_id),
+    FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
+);
+
 
 /* SOFTWARESOURCECODE */
 
@@ -880,6 +1026,12 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode
     keywords text,
     coderepository character varying(1024),
     mainentityofpage character varying(1024),
+    softwarestatus character varying(1024),
+    spatial text,
+    temporal text,
+    filesize character varying(1024),
+    timerequired character varying(1024),
+    softwarerequirements text,
     PRIMARY KEY (instance_id),
     FOREIGN KEY (version_id) REFERENCES metadata_catalogue.versioningstatus (version_id) ON DELETE CASCADE
 );
@@ -918,6 +1070,87 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_category
     PRIMARY KEY (softwaresourcecode_instance_id, category_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id) ON DELETE CASCADE,
     FOREIGN KEY (category_instance_id) REFERENCES metadata_catalogue.category (instance_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_citation
+(
+    element_instance_id character varying(100) NOT NULL,
+    softwaresourcecode_instance_id character varying(100) NOT NULL,
+    PRIMARY KEY (softwaresourcecode_instance_id, element_instance_id),
+    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id) ON DELETE CASCADE,
+    FOREIGN KEY (element_instance_id) REFERENCES metadata_catalogue.element (instance_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_author
+(
+    softwaresourcecode_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwaresourcecode_instance_id),
+    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_contributor
+(
+    softwaresourcecode_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwaresourcecode_instance_id),
+    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_funder
+(
+    softwaresourcecode_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwaresourcecode_instance_id),
+    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_maintainer
+(
+    softwaresourcecode_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwaresourcecode_instance_id),
+    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_provider
+(
+    softwaresourcecode_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwaresourcecode_instance_id),
+    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_publisher
+(
+    softwaresourcecode_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwaresourcecode_instance_id),
+    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
+);
+
+CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_creator
+(
+    softwaresourcecode_instance_id character varying(100) NOT NULL,
+    entity_instance_id character varying(100) NOT NULL,
+    resource_entity character varying(100) NOT NULL,
+    UNIQUE(entity_instance_id,resource_entity),
+    PRIMARY KEY (softwaresourcecode_instance_id),
+    FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
 
 
