@@ -1,4 +1,4 @@
 FROM yceos/spilo:2.0-p6
 
 LABEL description="Initializing EPOS metadata Database"
-COPY --chown=postgres:postgres ./docker-entrypoint-cleandb.d /docker-entrypoint-initdb.d
+COPY --chown=postgres:postgres ./docker-entrypoint-initdb.d /docker-entrypoint-initdb.d

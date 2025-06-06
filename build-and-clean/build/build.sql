@@ -6,7 +6,7 @@ SET standard_conforming_strings = off;
 SET escape_string_warning = off;
 
 -- Create database with proper encoding and collation
-CREATE DATABASE metadata_catalogue 
+CREATE DATABASE cerif 
     WITH OWNER = postgres
     ENCODING = 'UTF8'
     LC_COLLATE = 'en_US.UTF-8'
@@ -15,7 +15,7 @@ CREATE DATABASE metadata_catalogue
     CONNECTION LIMIT = -1;
 
 -- Connect to the newly created database
-\connect metadata_catalogue
+\connect cerif
 
 -- Install necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -23,8 +23,8 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";    -- For text similarity search
 CREATE EXTENSION IF NOT EXISTS "btree_gin";  -- For GIN indexing on B-tree columns
 
 -- Set optimal parameters for this database
-ALTER DATABASE metadata_catalogue SET work_mem = '64MB';           -- Helps with complex joins
-ALTER DATABASE metadata_catalogue SET maintenance_work_mem = '256MB'; -- Helps with index creation
-ALTER DATABASE metadata_catalogue SET random_page_cost = 1.1;      -- Optimized for SSD storage
-ALTER DATABASE metadata_catalogue SET effective_cache_size = '4GB'; -- Depends on your server memory
-ALTER DATABASE metadata_catalogue SET default_statistics_target = 500; -- More detailed statistics
+ALTER DATABASE cerif SET work_mem = '64MB';           -- Helps with complex joins
+ALTER DATABASE cerif SET maintenance_work_mem = '256MB'; -- Helps with index creation
+ALTER DATABASE cerif SET random_page_cost = 1.1;      -- Optimized for SSD storage
+ALTER DATABASE cerif SET effective_cache_size = '4GB'; -- Depends on your server memory
+ALTER DATABASE cerif SET default_statistics_target = 500; -- More detailed statistics

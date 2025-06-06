@@ -1,4 +1,8 @@
 FROM kartoza/postgis:14-3.1--v2021.10.12
 
 LABEL description="Initializing EPOS metadata Database"
-COPY --chown=postgres:postgres ./docker-entrypoint-cleandb.d /docker-entrypoint-initdb.d
+COPY --chown=postgres:postgres ./docker-entrypoint-initdb.d /docker-entrypoint-initdb.d
+
+ADD ./restoredb.sh /init-db/init-db.sh
+RUN chmod +x /init-db/init-db.sh
+
