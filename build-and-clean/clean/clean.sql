@@ -1,7 +1,6 @@
 \connect postgres
 
 REVOKE CONNECT ON DATABASE cerif FROM PUBLIC, cerif_admin;
-REVOKE CONNECT ON DATABASE public FROM PUBLIC, cerif_admin;
 
 SELECT 
     pg_terminate_backend(pid) 
