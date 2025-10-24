@@ -741,23 +741,3 @@ SELECT
 FROM pg_stat_user_indexes
 WHERE schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', 'tiger', 'topology')
 ORDER BY idx_scan ASC, pg_relation_size(indexrelid) DESC;
-
--- ============================================================================
--- UTILITY: Generate DROP statements for unused indexes
--- ============================================================================
-SELECT
-    'DROP INDEX IF EXISTS ' || schemaname || '.' || indexrelname || '; -- ' || 
-    'Size: ' || pg_size_pretty(pg_relation_size(indexrelid)) || 
-    ', Scans: ' || idx_scan AS drop_statement
-FROM pg_stat_user_indexes
-WHERE schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', 'tiger', 'topology')
-    AND idx_scan = 0
-    AND indexrelname NOT LIKE '%_pkey'  -- Don't drop primary keys
-    AND indexrelname NOT LIKE 'pg_toast%'
-ORDER BY pg_relation_size(indexrelid) DESC;
-
--- ============================================================================
--- UTILITY: Reset Index Statistics (for monitoring)
--- ============================================================================
--- Uncomment to reset statistics
--- SELECT pg_stat_reset();
