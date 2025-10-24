@@ -1,4 +1,106 @@
 -- ============================================================================
+-- CLEANUP DUPLICATE INDEXES
+-- ============================================================================
+-- Based on the output from your database, you have 22 duplicate indexes.
+-- This script will help you remove them safely.
+-- ============================================================================
+
+BEGIN;
+
+-- The following indexes are duplicates and can be safely dropped:
+-- (Keeping the longer, more descriptive names from comprehensive_indexes.sql)
+
+-- Plugin indexes - Drop shorter names, keep longer descriptive ones
+DROP INDEX IF EXISTS converter_catalogue.idx_plugin_enabled;
+DROP INDEX IF EXISTS converter_catalogue.idx_plugin_installed;
+DROP INDEX IF EXISTS converter_catalogue.idx_plugin_name;
+
+-- Processing unit indexes - Drop shorter names
+DROP INDEX IF EXISTS processing_catalogue.idx_processing_unit_changed_time;
+DROP INDEX IF EXISTS processing_catalogue.idx_processing_unit_creation_time;
+DROP INDEX IF EXISTS processing_catalogue.idx_processing_unit_environment_unit_id;
+DROP INDEX IF EXISTS processing_catalogue.idx_processing_unit_icsd_user_id;
+DROP INDEX IF EXISTS processing_catalogue.idx_processing_unit_type_id;
+DROP INDEX IF EXISTS processing_catalogue.idx_processing_unit_status;
+DROP INDEX IF EXISTS processing_catalogue.idx_processing_unit_status_changed;
+
+-- Resource item indexes - Drop shorter names
+DROP INDEX IF EXISTS processing_catalogue.idx_resource_item_addition_time;
+DROP INDEX IF EXISTS processing_catalogue.idx_resource_item_processing_unit_id;
+DROP INDEX IF EXISTS processing_catalogue.idx_resource_item_resource_uid;
+DROP INDEX IF EXISTS processing_catalogue.idx_resource_item_status;
+DROP INDEX IF EXISTS processing_catalogue.idx_resource_item_status_time;
+
+-- Authorization group indexes - Drop shorter names
+DROP INDEX IF EXISTS usergroup_catalogue.idx_authorization_group_group_id;
+DROP INDEX IF EXISTS usergroup_catalogue.idx_authorization_group_meta_id;
+
+-- Metadata group indexes - Drop shorter names
+DROP INDEX IF EXISTS usergroup_catalogue.idx_metadata_group_name;
+
+-- Metadata group user indexes - Drop shorter names
+DROP INDEX IF EXISTS usergroup_catalogue.idx_metadata_group_user_auth_id;
+DROP INDEX IF EXISTS usergroup_catalogue.idx_metadata_group_user_group_id;
+DROP INDEX IF EXISTS usergroup_catalogue.idx_metadata_group_user_status;
+
+-- Metadata user indexes - Drop shorter names
+DROP INDEX IF EXISTS usergroup_catalogue.idx_metadata_user_email;
+
+COMMIT;
+
+-- ============================================================================
+-- SUMMARY
+-- ============================================================================
+DO $$
+BEGIN
+    RAISE NOTICE '========================================';
+    RAISE NOTICE 'Duplicate index cleanup completed!';
+    RAISE NOTICE 'Removed 22 duplicate indexes.';
+    RAISE NOTICE 'Kept the descriptive index names from comprehensive script.';
+    RAISE NOTICE '========================================';
+END $$;
+
+-- ============================================================================
+-- VERIFY NO MORE DUPLICATES
+-- ============================================================================
+WITH index_columns AS (
+    SELECT
+        schemaname,
+        tablename,
+        indexname,
+        array_agg(attname ORDER BY attnum) AS columns
+    FROM (
+        SELECT
+            n.nspname AS schemaname,
+            t.relname AS tablename,
+            i.relname AS indexname,
+            a.attname,
+            a.attnum
+        FROM pg_index ix
+        JOIN pg_class t ON t.oid = ix.indrelid
+        JOIN pg_class i ON i.oid = ix.indexrelid
+        JOIN pg_namespace n ON n.oid = t.relnamespace
+        JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey)
+        WHERE t.relkind = 'r'
+            AND n.nspname NOT IN ('information_schema', 'pg_catalog', 'pg_toast')
+    ) sub
+    GROUP BY schemaname, tablename, indexname
+)
+SELECT
+    ic1.schemaname AS schema,
+    ic1.tablename AS table,
+    ic1.indexname AS index1,
+    ic2.indexname AS index2,
+    ic1.columns AS indexed_columns
+FROM index_columns ic1
+JOIN index_columns ic2
+    ON ic1.schemaname = ic2.schemaname
+    AND ic1.tablename = ic2.tablename
+    AND ic1.columns = ic2.columns
+    AND ic1.indexname < ic2.indexname
+ORDER BY ic1.schemaname, ic1.tablename;
+
+-- ============================================================================
 -- COMPREHENSIVE DYNAMIC INDEX CREATION SCRIPT
 -- ============================================================================
 -- This script automatically creates indexes on:
@@ -474,27 +576,31 @@ END $$;
 -- VIEW 1: All Indexes Summary
 -- ============================================================================
 SELECT 
-    schemaname AS schema,
-    tablename AS table,
-    indexname AS index,
-    indexdef AS definition,
-    pg_size_pretty(pg_relation_size(indexrelid)) AS size
-FROM pg_indexes
-WHERE schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', 'tiger', 'topology')
-ORDER BY schemaname, tablename, indexname;
+    i.schemaname AS schema,
+    i.tablename AS table,
+    i.indexname AS index,
+    i.indexdef AS definition,
+    pg_size_pretty(pg_relation_size(c.oid)) AS size
+FROM pg_indexes i
+JOIN pg_class c ON c.relname = i.indexname
+JOIN pg_namespace n ON n.oid = c.relnamespace AND n.nspname = i.schemaname
+WHERE i.schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', 'tiger', 'topology')
+ORDER BY i.schemaname, i.tablename, i.indexname;
 
 -- ============================================================================
 -- VIEW 2: Indexes by Size (Largest First)
 -- ============================================================================
 SELECT 
-    schemaname AS schema,
-    tablename AS table,
-    indexname AS index,
-    pg_size_pretty(pg_relation_size(indexrelid)) AS size,
-    pg_relation_size(indexrelid) AS size_bytes
-FROM pg_indexes
-WHERE schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', 'tiger', 'topology')
-ORDER BY pg_relation_size(indexrelid) DESC;
+    i.schemaname AS schema,
+    i.tablename AS table,
+    i.indexname AS index,
+    pg_size_pretty(pg_relation_size(c.oid)) AS size,
+    pg_relation_size(c.oid) AS size_bytes
+FROM pg_indexes i
+JOIN pg_class c ON c.relname = i.indexname
+JOIN pg_namespace n ON n.oid = c.relnamespace AND n.nspname = i.schemaname
+WHERE i.schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', 'tiger', 'topology')
+ORDER BY pg_relation_size(c.oid) DESC;
 
 -- ============================================================================
 -- VIEW 3: Unused Indexes (Consider Dropping)
@@ -502,8 +608,8 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 -- Note: Requires pg_stat_statements extension or pg_stat_user_indexes
 SELECT
     schemaname AS schema,
-    tablename AS table,
-    indexname AS index,
+    relname AS table,
+    indexrelname AS index,
     idx_scan AS scans,
     idx_tup_read AS tuples_read,
     idx_tup_fetch AS tuples_fetched,
@@ -605,23 +711,23 @@ ORDER BY ic1.schemaname, ic1.tablename;
 -- ============================================================================
 SELECT
     schemaname AS schema,
-    tablename AS table,
-    pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS total_size,
-    pg_size_pretty(pg_relation_size(schemaname||'.'||tablename)) AS table_size,
-    pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename) - pg_relation_size(schemaname||'.'||tablename)) AS indexes_size,
+    relname AS table,
+    pg_size_pretty(pg_total_relation_size(schemaname||'.'||relname)) AS total_size,
+    pg_size_pretty(pg_relation_size(schemaname||'.'||relname)) AS table_size,
+    pg_size_pretty(pg_total_relation_size(schemaname||'.'||relname) - pg_relation_size(schemaname||'.'||relname)) AS indexes_size,
     n_live_tup AS live_rows,
     n_dead_tup AS dead_rows
 FROM pg_stat_user_tables
 WHERE schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', 'tiger', 'topology')
-ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
+ORDER BY pg_total_relation_size(schemaname||'.'||relname) DESC;
 
 -- ============================================================================
 -- VIEW 7: Index Usage Statistics
 -- ============================================================================
 SELECT
     schemaname AS schema,
-    tablename AS table,
-    indexname AS index,
+    relname AS table,
+    indexrelname AS index,
     idx_scan AS scans,
     idx_tup_read AS tuples_read,
     idx_tup_fetch AS tuples_fetched,
@@ -640,7 +746,7 @@ ORDER BY idx_scan ASC, pg_relation_size(indexrelid) DESC;
 -- UTILITY: Generate DROP statements for unused indexes
 -- ============================================================================
 SELECT
-    'DROP INDEX IF EXISTS ' || schemaname || '.' || indexname || '; -- ' || 
+    'DROP INDEX IF EXISTS ' || schemaname || '.' || indexrelname || '; -- ' || 
     'Size: ' || pg_size_pretty(pg_relation_size(indexrelid)) || 
     ', Scans: ' || idx_scan AS drop_statement
 FROM pg_stat_user_indexes
