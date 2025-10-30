@@ -14,7 +14,7 @@ CREATE DATABASE cerif
     TEMPLATE = template0
     CONNECTION LIMIT = -1;
 
-CREATE ROLE cerif_admin;
+CREATE ROLE epos_admin;
 
 -- Connect to the newly created database
 \connect cerif
