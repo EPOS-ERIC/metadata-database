@@ -23,7 +23,7 @@ DECLARE
 BEGIN
     FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'metadata_catalogue') LOOP
         BEGIN
-            EXECUTE 'TRUNCATE TABLE processing_catalogue.' || quote_ident(r.tablename) || ' CASCADE';
+            EXECUTE 'TRUNCATE TABLE metadata_catalogue.' || quote_ident(r.tablename) || ' CASCADE';
             RAISE NOTICE 'Truncated: %', r.tablename;
         EXCEPTION
             WHEN undefined_table THEN
@@ -38,7 +38,7 @@ DECLARE
 BEGIN
     FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'converter_catalogue') LOOP
         BEGIN
-            EXECUTE 'TRUNCATE TABLE processing_catalogue.' || quote_ident(r.tablename) || ' CASCADE';
+            EXECUTE 'TRUNCATE TABLE converter_catalogue.' || quote_ident(r.tablename) || ' CASCADE';
             RAISE NOTICE 'Truncated: %', r.tablename;
         EXCEPTION
             WHEN undefined_table THEN
@@ -68,7 +68,7 @@ DECLARE
 BEGIN
     FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'sharing_catalogue') LOOP
         BEGIN
-            EXECUTE 'TRUNCATE TABLE processing_catalogue.' || quote_ident(r.tablename) || ' CASCADE';
+            EXECUTE 'TRUNCATE TABLE sharing_catalogue.' || quote_ident(r.tablename) || ' CASCADE';
             RAISE NOTICE 'Truncated: %', r.tablename;
         EXCEPTION
             WHEN undefined_table THEN
