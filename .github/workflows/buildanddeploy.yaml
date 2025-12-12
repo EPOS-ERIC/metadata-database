@@ -91,10 +91,22 @@ jobs:
         with:
           sarif_file: 'trivy-fs-results.sarif'
 
+      # Using Gitleaks CLI directly (free, no license required)
+      - name: Install Gitleaks
+        run: |
+          wget -qO- https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz | tar xz
+          sudo mv gitleaks /usr/local/bin/
+
       - name: Scan for secrets with Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gitleaks detect --source . --verbose --redact --exit-code 0 --report-format sarif --report-path gitleaks-results.sarif
+
+      - name: Upload Gitleaks results
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('gitleaks-results.sarif') != ''
+        with:
+          sarif_file: 'gitleaks-results.sarif'
+          category: 'gitleaks'
 
   test-schema:
     runs-on: ubuntu-latest
