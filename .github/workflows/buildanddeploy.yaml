@@ -205,6 +205,33 @@ jobs:
           echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
           echo "repo=$(echo '${{ github.event.repository.name }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
+      # Prepare the docker-entrypoint-initdb.d directory expected by the Dockerfile
+      - name: Prepare database init scripts
+        run: |
+          mkdir -p docker-entrypoint-initdb.d
+          
+          # Copy init script if it exists
+          if [ -f "initdb.sh" ]; then
+            cp initdb.sh docker-entrypoint-initdb.d/00-initdb.sh
+            chmod +x docker-entrypoint-initdb.d/00-initdb.sh
+          fi
+          
+          # Copy SQL files from catalogue directories in order
+          counter=10
+          for dir in metadata-catalogue converter-catalogue processing-catalogue sharing-catalogue users-group-catalogue; do
+            if [ -d "$dir" ]; then
+              for sqlfile in $(find "$dir" -name "*.sql" -type f | sort); do
+                filename=$(basename "$sqlfile")
+                cp "$sqlfile" "docker-entrypoint-initdb.d/${counter}-${dir}-${filename}"
+                counter=$((counter + 1))
+              done
+            fi
+          done
+          
+          # List contents for debugging
+          echo "=== Contents of docker-entrypoint-initdb.d ==="
+          ls -la docker-entrypoint-initdb.d/ || echo "Directory is empty or does not exist"
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
