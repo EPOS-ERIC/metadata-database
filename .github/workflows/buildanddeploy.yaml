@@ -5,6 +5,10 @@
 #   - Push of a tag: Runs validation, builds and pushes Docker images with version tags
 #   - Pull request to main: Runs validation only (no build/push)
 #
+# Tagging strategy:
+#   - On tag push: version tag (e.g., v1.0.0), latest tag, and commit SHA
+#   - On main push: commit SHA only
+#
 # Images built:
 #   - deploy: Main database image (uses initdb.sh)
 #   - spilo: Spilo-based image (uses initdb.sh)
@@ -25,6 +29,7 @@ on:
 env:
   REGISTRY: ghcr.io
   POSTGRES_VERSION: "16"
+  VERSION: ${{ github.ref_type == 'tag' && github.ref_name || 'latest' }}
 
 jobs:
   validate-sql:
@@ -183,18 +188,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set image name and tags
-        id: vars
+      - name: Set lowercase image name
+        id: image-name
         run: |
-          IMAGE_NAME=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
-          
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            echo "version_tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          else
-            BRANCH_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
-            echo "version_tag=${BRANCH_TAG}" >> $GITHUB_OUTPUT
-          fi
+          echo "name=$(echo 'ghcr.io/${{ github.repository }}/deploy' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Prepare SQL files with secrets
         run: |
@@ -221,6 +218,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Tagging strategy:
+      # - On tag push: version tag (e.g., v1.0.0), latest tag, and commit SHA
+      # - On main push: commit SHA only
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image-name.outputs.name }}
+          tags: |
+            type=raw,value=${{ env.VERSION }},enable=${{ github.ref_type == 'tag' }}
+            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
+            type=ref,event=branch
+            type=sha,prefix=
+
       - name: Build and Push deploy image
         id: build-push
         uses: docker/build-push-action@v6
@@ -229,16 +240,15 @@ jobs:
           file: ./Dockerfile.build
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ steps.vars.outputs.image_name }}/deploy:${{ steps.vars.outputs.version_tag }}
-            ${{ steps.vars.outputs.image_name }}/deploy:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ steps.vars.outputs.image_name }}/deploy:${{ steps.vars.outputs.version_tag }}'
+          image-ref: '${{ steps.image-name.outputs.name }}@${{ steps.build-push.outputs.digest }}'
           format: 'sarif'
           output: 'trivy-deploy-results.sarif'
           severity: 'CRITICAL,HIGH'
@@ -274,19 +284,11 @@ jobs:
             echo "::warning::Dockerfile.spilo not found, skipping build"
           fi
 
-      - name: Set image name and tags
+      - name: Set lowercase image name
         if: steps.check-dockerfile.outputs.exists == 'true'
-        id: vars
+        id: image-name
         run: |
-          IMAGE_NAME=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
-          
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            echo "version_tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          else
-            BRANCH_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
-            echo "version_tag=${BRANCH_TAG}" >> $GITHUB_OUTPUT
-          fi
+          echo "name=$(echo 'ghcr.io/${{ github.repository }}/spilo' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Prepare SQL files with secrets
         if: steps.check-dockerfile.outputs.exists == 'true'
@@ -318,6 +320,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Tagging strategy:
+      # - On tag push: version tag (e.g., v1.0.0), latest tag, and commit SHA
+      # - On main push: commit SHA only
+      - name: Extract Docker metadata
+        if: steps.check-dockerfile.outputs.exists == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image-name.outputs.name }}
+          tags: |
+            type=raw,value=${{ env.VERSION }},enable=${{ github.ref_type == 'tag' }}
+            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
+            type=ref,event=branch
+            type=sha,prefix=
+
       - name: Build and Push spilo image
         if: steps.check-dockerfile.outputs.exists == 'true'
         uses: docker/build-push-action@v6
@@ -326,9 +343,8 @@ jobs:
           file: ./Dockerfile.spilo
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ steps.vars.outputs.image_name }}/spilo:${{ steps.vars.outputs.version_tag }}
-            ${{ steps.vars.outputs.image_name }}/spilo:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -355,19 +371,11 @@ jobs:
             echo "::warning::Dockerfile.clean not found, skipping build"
           fi
 
-      - name: Set image name and tags
+      - name: Set lowercase image name
         if: steps.check-dockerfile.outputs.exists == 'true'
-        id: vars
+        id: image-name
         run: |
-          IMAGE_NAME=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
-          
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            echo "version_tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          else
-            BRANCH_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
-            echo "version_tag=${BRANCH_TAG}" >> $GITHUB_OUTPUT
-          fi
+          echo "name=$(echo 'ghcr.io/${{ github.repository }}/restorejob' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Prepare SQL files with secrets
         if: steps.check-dockerfile.outputs.exists == 'true'
@@ -399,6 +407,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Tagging strategy:
+      # - On tag push: version tag (e.g., v1.0.0), latest tag, and commit SHA
+      # - On main push: commit SHA only
+      - name: Extract Docker metadata
+        if: steps.check-dockerfile.outputs.exists == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image-name.outputs.name }}
+          tags: |
+            type=raw,value=${{ env.VERSION }},enable=${{ github.ref_type == 'tag' }}
+            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
+            type=ref,event=branch
+            type=sha,prefix=
+
       - name: Build and Push restorejob image
         if: steps.check-dockerfile.outputs.exists == 'true'
         uses: docker/build-push-action@v6
@@ -407,11 +430,11 @@ jobs:
           file: ./Dockerfile.clean
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ steps.vars.outputs.image_name }}/restorejob:${{ steps.vars.outputs.version_tag }}
-            ${{ steps.vars.outputs.image_name }}/restorejob:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
   mirror:
     runs-on: ubuntu-latest
     needs: [build-deploy, build-spilo, build-restorejob]
