@@ -12,7 +12,7 @@
 #   4. build: Builds Docker image and pushes to GitHub Container Registry (public)
 #   5. mirror: Mirrors the repository to GitLab
 
-name: "release, push to ghcr.io and mirror"
+name: "Release, Push to GHCR and Mirror"
 
 on:
   push:
@@ -45,7 +45,6 @@ jobs:
 
       - name: Lint SQL files
         run: |
-          # Configure SQLFluff for PostgreSQL
           cat > .sqlfluff <<EOF
           [sqlfluff]
           dialect = postgres
@@ -57,15 +56,11 @@ jobs:
           extended_capitalisation_policy = consistent
           EOF
           
-          # Find and lint all SQL files (non-blocking for now, reports issues)
           find . -name "*.sql" -type f | head -20 | xargs -r sqlfluff lint --dialect postgres || true
 
       - name: Check shell scripts
         run: |
-          # Install shellcheck
           sudo apt-get update && sudo apt-get install -y shellcheck
-          
-          # Lint shell scripts
           find . -name "*.sh" -type f -exec shellcheck {} \; || true
 
   security-scan:
@@ -76,7 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run Trivy vulnerability scanner (filesystem)
+      - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
@@ -91,14 +86,10 @@ jobs:
         with:
           sarif_file: 'trivy-fs-results.sarif'
 
-      # Using Gitleaks CLI directly (free, no license required)
-      - name: Install Gitleaks
+      - name: Install and run Gitleaks
         run: |
           wget -qO- https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz | tar xz
           sudo mv gitleaks /usr/local/bin/
-
-      - name: Scan for secrets with Gitleaks
-        run: |
           gitleaks detect --source . --verbose --redact --exit-code 0 --report-format sarif --report-path gitleaks-results.sarif
 
       - name: Upload Gitleaks results
@@ -124,7 +115,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
 
@@ -143,19 +133,14 @@ jobs:
           PGPASSWORD: postgres
           PGDATABASE: testdb
         run: |
-          # Test that initdb.sh runs successfully (if it exists and is executable)
-          if [ -f "./initdb.sh" ] && [ -x "./initdb.sh" ]; then
-            echo "Running initdb.sh..."
+          if [ -f "./initdb.sh" ]; then
             chmod +x ./initdb.sh
             ./initdb.sh || echo "initdb.sh completed with exit code $?"
           fi
           
-          # Alternatively, try to apply SQL files from catalogue directories
           for dir in metadata-catalogue converter-catalogue processing-catalogue sharing-catalogue users-group-catalogue; do
             if [ -d "$dir" ]; then
-              echo "Processing SQL files in $dir..."
               find "$dir" -name "*.sql" -type f | sort | while read -r sqlfile; do
-                echo "Applying: $sqlfile"
                 psql -f "$sqlfile" || echo "Warning: $sqlfile had issues"
               done
             fi
@@ -169,19 +154,11 @@ jobs:
           PGPASSWORD: postgres
           PGDATABASE: testdb
         run: |
-          # List all created schemas
-          echo "=== Schemas ==="
-          psql -c "\dn"
+          echo "=== Schemas ===" && psql -c "\dn"
+          echo "=== Tables ===" && psql -c "\dt *.*" || psql -c "\dt"
+          echo "=== Functions ===" && psql -c "SELECT routine_schema, routine_name FROM information_schema.routines WHERE routine_type = 'FUNCTION' AND routine_schema NOT IN ('pg_catalog', 'information_schema') LIMIT 50;"
           
-          # List all tables
-          echo "=== Tables ==="
-          psql -c "\dt *.*" || psql -c "\dt"
-          
-          # List all functions
-          echo "=== Functions ==="
-          psql -c "SELECT routine_schema, routine_name FROM information_schema.routines WHERE routine_type = 'FUNCTION' AND routine_schema NOT IN ('pg_catalog', 'information_schema') LIMIT 50;"
-
-  build:
+  build-deploy:
     runs-on: ubuntu-latest
     needs: [validate-sql, security-scan, test-schema]
     if: github.event_name == 'push'
@@ -197,40 +174,35 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Docker/OCI image names must be lowercase
       - name: Set lowercase image name
         id: image-name
         run: |
           echo "name=$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
-          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
-          echo "repo=$(echo '${{ github.event.repository.name }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      # Prepare the docker-entrypoint-initdb.d directory expected by the Dockerfile
-      - name: Prepare database init scripts
+      - name: Populate SQL files with secrets
         run: |
-          mkdir -p docker-entrypoint-initdb.d
+          # Crea le directory se non esistono
+          mkdir -p ./build-and-clean/postgis-setting
           
-          # Copy init script if it exists
-          if [ -f "initdb.sh" ]; then
-            cp initdb.sh docker-entrypoint-initdb.d/00-initdb.sh
-            chmod +x docker-entrypoint-initdb.d/00-initdb.sh
+          # Aggiungi i dati sensibili ai file SQL (come fa GitLab CI)
+          echo "${{ secrets.ADMIN_REFACTORING_INSERT }}" >> ./build-and-clean/postgis-setting/users.sql
+          echo "${{ secrets.TESTER_REFACTORING_INSERT }}" >> ./build-and-clean/postgis-setting/testers.sql
+          echo "${{ secrets.GROUPS_REFACTORING_INSERT }}" >> ./build-and-clean/postgis-setting/groups.sql
+          echo "${{ secrets.GROUPS_USERS_INSERT }}" >> ./build-and-clean/postgis-setting/relations.sql
+
+      - name: Run initdb.sh to prepare docker-entrypoint-initdb.d
+        run: |
+          if [ -f "./initdb.sh" ]; then
+            chmod +x ./initdb.sh
+            sh ./initdb.sh
+          else
+            echo "ERROR: initdb.sh not found!"
+            exit 1
           fi
           
-          # Copy SQL files from catalogue directories in order
-          counter=10
-          for dir in metadata-catalogue converter-catalogue processing-catalogue sharing-catalogue users-group-catalogue; do
-            if [ -d "$dir" ]; then
-              for sqlfile in $(find "$dir" -name "*.sql" -type f | sort); do
-                filename=$(basename "$sqlfile")
-                cp "$sqlfile" "docker-entrypoint-initdb.d/${counter}-${dir}-${filename}"
-                counter=$((counter + 1))
-              done
-            fi
-          done
-          
-          # List contents for debugging
+          # Verifica che la directory sia stata creata
           echo "=== Contents of docker-entrypoint-initdb.d ==="
-          ls -la docker-entrypoint-initdb.d/ || echo "Directory is empty or does not exist"
+          ls -la docker-entrypoint-initdb.d/ || { echo "ERROR: docker-entrypoint-initdb.d not created!"; exit 1; }
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -245,77 +217,34 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Tagging strategy:
-      # - On tag push: version tag (e.g., v1.0.0), latest tag, and commit SHA
-      # - On main push: commit SHA only
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ steps.image-name.outputs.name }}
+          images: ${{ steps.image-name.outputs.name }}/deploy
           tags: |
-            type=raw,value=${{ env.VERSION }},enable=${{ github.ref_type == 'tag' }}
-            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
             type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref_type == 'tag' }}
             type=sha,prefix=
 
-      - name: Build and Push main Dockerfile
+      - name: Build and Push deploy image (Dockerfile.build)
         id: build-push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          sbom: true
-          provenance: mode=max
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # Build additional Dockerfiles if they exist
-      - name: Build and Push Dockerfile.build
-        if: hashFiles('Dockerfile.build') != ''
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile.build
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.image-name.outputs.name }}:build-${{ env.VERSION }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=deploy
+          cache-to: type=gha,mode=max,scope=deploy
 
-      - name: Build and Push Dockerfile.clean
-        if: hashFiles('Dockerfile.clean') != ''
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile.clean
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.image-name.outputs.name }}:clean-${{ env.VERSION }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and Push Dockerfile.spilo
-        if: hashFiles('Dockerfile.spilo') != ''
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile.spilo
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.image-name.outputs.name }}:spilo-${{ env.VERSION }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # Scan the main Docker image
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ steps.image-name.outputs.name }}@${{ steps.build-push.outputs.digest }}'
+          image-ref: '${{ steps.image-name.outputs.name }}/deploy@${{ steps.build-push.outputs.digest }}'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
@@ -326,29 +255,152 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-      # Login to Docker Hub (required for Docker Scout)
-      - name: Login to DockerHub
+  build-restorejob:
+    runs-on: ubuntu-latest
+    needs: [validate-sql, security-scan, test-schema]
+    if: github.event_name == 'push' && hashFiles('Dockerfile.clean') != ''
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set lowercase image name
+        id: image-name
+        run: |
+          echo "name=$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Populate SQL files with secrets
+        run: |
+          mkdir -p ./build-and-clean/postgis-setting
+          echo "${{ secrets.ADMIN_REFACTORING_INSERT }}" >> ./build-and-clean/postgis-setting/users.sql
+          echo "${{ secrets.TESTER_REFACTORING_INSERT }}" >> ./build-and-clean/postgis-setting/testers.sql
+          echo "${{ secrets.GROUPS_REFACTORING_INSERT }}" >> ./build-and-clean/postgis-setting/groups.sql
+          echo "${{ secrets.GROUPS_USERS_INSERT }}" >> ./build-and-clean/postgis-setting/relations.sql
+
+      - name: Run cleandb.sh to prepare docker-entrypoint-initdb.d
+        run: |
+          if [ -f "./cleandb.sh" ]; then
+            chmod +x ./cleandb.sh
+            sh ./cleandb.sh
+          else
+            echo "ERROR: cleandb.sh not found!"
+            exit 1
+          fi
+          
+          ls -la docker-entrypoint-initdb.d/
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
-        if: github.ref_type == 'tag'
-        continue-on-error: true
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run Docker Scout
-        uses: docker/scout-action@v1
-        if: github.ref_type == 'tag'
-        continue-on-error: true
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          command: cves,recommendations
-          image: ${{ steps.image-name.outputs.name }}:${{ env.VERSION }}
-          only-severities: critical,high
-          exit-code: false
+          images: ${{ steps.image-name.outputs.name }}/restorejob
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref_type == 'tag' }}
 
+      - name: Build and Push restorejob image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.clean
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha,scope=restorejob
+          cache-to: type=gha,mode=max,scope=restorejob
+
+  build-spilo:
+    runs-on: ubuntu-latest
+    needs: [validate-sql, security-scan, test-schema]
+    if: github.event_name == 'push' && hashFiles('Dockerfile.spilo') != ''
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set lowercase image name
+        id: image-name
+        run: |
+          echo "name=$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Populate SQL files with secrets
+        run: |
+          mkdir -p ./build-and-clean/postgis-setting
+          echo "${{ secrets.ADMIN_REFACTORING_INSERT }}" >> ./build-and-clean/postgis-setting/users.sql
+          echo "${{ secrets.TESTER_REFACTORING_INSERT }}" >> ./build-and-clean/postgis-setting/testers.sql
+          echo "${{ secrets.GROUPS_REFACTORING_INSERT }}" >> ./build-and-clean/postgis-setting/groups.sql
+          echo "${{ secrets.GROUPS_USERS_INSERT }}" >> ./build-and-clean/postgis-setting/relations.sql
+
+      - name: Run initdb.sh to prepare docker-entrypoint-initdb.d
+        run: |
+          if [ -f "./initdb.sh" ]; then
+            chmod +x ./initdb.sh
+            sh ./initdb.sh
+          else
+            echo "ERROR: initdb.sh not found!"
+            exit 1
+          fi
+          
+          ls -la docker-entrypoint-initdb.d/
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image-name.outputs.name }}/spilo
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref_type == 'tag' }}
+
+      - name: Build and Push spilo image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.spilo
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha,scope=spilo
+          cache-to: type=gha,mode=max,scope=spilo
   mirror:
     runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name == 'push'
+    needs: [build-deploy, build-restorejob, build-spilo]
+    if: |
+      always() && 
+      github.event_name == 'push' && 
+      needs.build-deploy.result == 'success'
     permissions:
       contents: read
     steps:
