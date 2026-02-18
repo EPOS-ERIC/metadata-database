@@ -77,6 +77,21 @@ BEGIN
     END LOOP;
 END $$;
 
+DO $$ 
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'usergroup_catalogue') LOOP
+        BEGIN
+            EXECUTE 'TRUNCATE TABLE usergroup_catalogue.' || quote_ident(r.tablename) || ' CASCADE';
+            RAISE NOTICE 'Truncated: %', r.tablename;
+        EXCEPTION
+            WHEN undefined_table THEN
+                RAISE NOTICE 'Skipped (not found): %', r.tablename;
+        END;
+    END LOOP;
+END $$;
+
 -- Re-grant database connection rights
 \connect postgres
 GRANT CONNECT ON DATABASE cerif TO epos_admin;

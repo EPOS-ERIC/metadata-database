@@ -23,3 +23,9 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE EXTENSION IF NOT EXISTS hstore schema pg_catalog;
 
+-- Enable pg_cron for scheduled jobs (requires shared_preload_libraries = 'pg_cron' in postgresql.conf)
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Allow pg_cron to run jobs in the cerif database
+UPDATE cron.job SET database = 'cerif' WHERE database = 'postgres';
+

@@ -111,3 +111,13 @@ echo "\connect cerif;" > $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 cat  $x >> $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
 done
 COUNT=$((COUNT + 1))
+
+COUNT=0
+COUNT_DB=$((COUNT_DB + 1))
+
+# CRON JOBS (must run after pg_cron extension is enabled in postgis-setting)
+for x in users-group-catalogue/cron-jobs/*; do
+echo "\connect cerif;" > $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
+cat  $x >> $INITCERIF/$((COUNT_DB))_$((COUNT))_${x##*/}
+done
+COUNT=$((COUNT + 1))
