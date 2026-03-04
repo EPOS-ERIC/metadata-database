@@ -943,7 +943,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_author
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
@@ -953,7 +952,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_contributor
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
@@ -963,7 +961,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_funder
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
@@ -973,7 +970,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_maintainer
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
@@ -983,7 +979,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_provider
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
@@ -993,7 +988,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_publisher
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
@@ -1003,7 +997,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_creator
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
@@ -1078,7 +1071,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_author
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
@@ -1088,7 +1080,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_contributor
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
@@ -1098,7 +1089,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_funder
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
@@ -1108,7 +1098,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_maintainer
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
@@ -1118,7 +1107,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_provider
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
@@ -1128,7 +1116,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_publisher
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
@@ -1138,7 +1125,6 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_creator
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
