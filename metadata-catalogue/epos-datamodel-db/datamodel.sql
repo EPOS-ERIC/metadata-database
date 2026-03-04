@@ -943,70 +943,77 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_author
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwareapplication_author DROP CONSTRAINT IF EXISTS softwareapplication_author_entity_instance_id_resource_enti_key;
 
 CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_contributor
 (
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwareapplication_contributor DROP CONSTRAINT IF EXISTS softwareapplication_contribut_entity_instance_id_resource_e_key;
 
 CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_funder
 (
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwareapplication_funder DROP CONSTRAINT IF EXISTS softwareapplication_funder_entity_instance_id_resource_enti_key;
 
 CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_maintainer
 (
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwareapplication_maintainer DROP CONSTRAINT IF EXISTS softwareapplication_maintaine_entity_instance_id_resource_e_key;
 
 CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_provider
 (
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwareapplication_provider DROP CONSTRAINT IF EXISTS softwareapplication_provider_entity_instance_id_resource_en_key;
 
 CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_publisher
 (
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwareapplication_publisher DROP CONSTRAINT IF EXISTS softwareapplication_publisher_entity_instance_id_resource_e_key;
 
 CREATE TABLE IF NOT EXISTS metadata_catalogue.softwareapplication_creator
 (
     softwareapplication_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwareapplication_instance_id),
     FOREIGN KEY (softwareapplication_instance_id) REFERENCES metadata_catalogue.softwareapplication (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwareapplication_creator DROP CONSTRAINT IF EXISTS softwareapplication_creator_entity_instance_id_resource_ent_key;
 
 
 /* SOFTWARESOURCECODE */
@@ -1078,70 +1085,77 @@ CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_author
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwaresourcecode_author DROP CONSTRAINT IF EXISTS softwaresourcecode_author_entity_instance_id_resource_entit_key;
 
 CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_contributor
 (
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwaresourcecode_contributor DROP CONSTRAINT IF EXISTS softwaresourcecode_contributo_entity_instance_id_resource_e_key;
 
 CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_funder
 (
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwaresourcecode_funder DROP CONSTRAINT IF EXISTS softwaresourcecode_funder_entity_instance_id_resource_entit_key;
 
 CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_maintainer
 (
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwaresourcecode_maintainer DROP CONSTRAINT IF EXISTS softwaresourcecode_maintainer_entity_instance_id_resource_e_key;
 
 CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_provider
 (
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwaresourcecode_provider DROP CONSTRAINT IF EXISTS softwaresourcecode_provider_entity_instance_id_resource_ent_key;
 
 CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_publisher
 (
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwaresourcecode_publisher DROP CONSTRAINT IF EXISTS softwaresourcecode_publisher_entity_instance_id_resource_en_key;
 
 CREATE TABLE IF NOT EXISTS metadata_catalogue.softwaresourcecode_creator
 (
     softwaresourcecode_instance_id character varying(100) NOT NULL,
     entity_instance_id character varying(100) NOT NULL,
     resource_entity character varying(100) NOT NULL,
-    UNIQUE(entity_instance_id,resource_entity),
     PRIMARY KEY (softwaresourcecode_instance_id),
     FOREIGN KEY (softwaresourcecode_instance_id) REFERENCES metadata_catalogue.softwaresourcecode (instance_id)
 );
+
+ALTER TABLE metadata_catalogue.softwaresourcecode_creator DROP CONSTRAINT IF EXISTS softwaresourcecode_creator_entity_instance_id_resource_enti_key;
 
 
 /* SERVICE */
